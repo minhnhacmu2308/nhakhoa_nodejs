@@ -20,7 +20,7 @@ const Appointment = () => {
     const navigate = useNavigate()
 
     const fetchDocInfo = async () => {
-        const docInfo = doctors.find((doc) => doc._id === docId)
+        const docInfo = doctors.find((doc) => doc.id === parseInt(docId, 10))
         setDocInfo(docInfo)
     }
 

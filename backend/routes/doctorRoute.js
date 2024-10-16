@@ -17,9 +17,28 @@ doctorRouter.get('/createTable', async (req, res) => {
       about TEXT NOT NULL,
       available BOOLEAN DEFAULT true,
       fees DECIMAL(10, 2) NOT NULL,
-      slots_booked JSON DEFAULT '{}',
-      address JSON NOT NULL,
-      date BIGINT NOT NULL
+      address VARCHAR(255) NOT NULL,
+      date DATETIME NOT NULL
+    )
+  `;
+
+  try {
+    await req.app.locals.db.execute(sql);
+    res.send('Bảng doctors đã được tạo hoặc đã tồn tại');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Đã xảy ra lỗi khi tạo bảng');
+  }
+});
+
+doctorRouter.get('/createTable-slot', async (req, res) => {
+  const sql = `
+    CREATE TABLE IF NOT EXISTS slots (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      doctor_id INT NOT NULL,
+      slot_date DATE NOT NULL, 
+      slot_time TIME NOT NULL, 
+      is_booked BOOLEAN DEFAULT false
     )
   `;
 

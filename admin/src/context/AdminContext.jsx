@@ -35,6 +35,7 @@ const AdminContextProvider = (props) => {
 
     // Function to change doctor availablity using API
     const changeAvailability = async (docId) => {
+        console.log("docId", docId)
         try {
 
             const { data } = await axios.post(backendUrl + '/api/admin/change-availability', { docId }, { headers: { aToken } })

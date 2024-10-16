@@ -10,12 +10,10 @@ adminRouter.get('/createTable', async (req, res) => {
   const sql = `
     CREATE TABLE IF NOT EXISTS appointments (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId VARCHAR(255) NOT NULL,
-      docId VARCHAR(255) NOT NULL,
-      slotDate VARCHAR(255) NOT NULL,
-      slotTime VARCHAR(255) NOT NULL,
+      userId INT NOT NULL,
+      slotId INT NOT NULL,
       amount DECIMAL(10, 2) NOT NULL,
-      date BIGINT NOT NULL,
+      date DATETIME NOT NULL,
       cancelled BOOLEAN DEFAULT false,
       payment BOOLEAN DEFAULT false,
       isCompleted BOOLEAN DEFAULT false

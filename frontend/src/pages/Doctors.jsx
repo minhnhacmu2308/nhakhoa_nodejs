@@ -39,7 +39,7 @@ const Doctors = () => {
         </div>
         <div className='w-full grid grid-cols-auto gap-4 gap-y-6'>
           {filterDoc.map((item, index) => (
-            <div onClick={() => { navigate(`/appointment/${item._id}`); scrollTo(0, 0) }} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500' key={index}>
+            <div onClick={() => { navigate(`/appointment/${item.id}`); scrollTo(0, 0) }} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500' key={index}>
               <img className='bg-[#EAEFFF]' src={item.image} alt="" />
               <div className='p-4'>
                 <div className={`flex items-center gap-2 text-sm text-center ${item.available ? 'text-green-500' : "text-gray-500"}`}>
