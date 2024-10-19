@@ -121,6 +121,132 @@ const adminDashboard = async (req, res) => {
     }
 };
 
+// API to add a new slot
+const addSlot = async (req, res) => {
+    try {
+        console.log(req.body);
+        const { doctorId, slotDate, slotTime } = req.body; // Cập nhật trường từ camelCase
+
+        // Validate slot_date and slot_time
+        if (!doctorId || !slotDate || !slotTime) {
+            return res.json({ success: false, message: "Missing required fields" });
+        }
+
+        const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slotDate); // YYYY-MM-DD
+        const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slotTime); // HH:MM or HH:MM:SS
+
+        if (!validDate || !validTime) {
+            return res.json({ success: false, message: "Invalid date or time format" });
+        }
+
+        // Check for duplicate slot
+        const [existingSlot] = await req.app.locals.db.execute(
+            'SELECT * FROM slots WHERE doctor_id = ? AND slot_date = ? AND slot_time = ?',
+            [doctorId, slotDate, slotTime]
+        );
+        console.log("existingSlot", existingSlot)
+        if (existingSlot.length > 0) {
+            return res.json({ success: false, message: "Slot already exists for this doctor on the selected date and time" });
+        }
+
+        // Insert into the database
+        await req.app.locals.db.execute(
+            'INSERT INTO slots (doctor_id, slot_date, slot_time) VALUES (?, ?, ?)',
+            [doctorId, slotDate, slotTime] // Cập nhật trường tại đây
+        );
+
+        res.json({ success: true, message: "Slot added successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// API to update an existing slot
+const updateSlot = async (req, res) => {
+    try {
+        const { id, doctorId, slotDate, slotTime } = req.body; // Cập nhật trường từ camelCase
+
+        // Validate slot_date and slot_time
+        if (!id || !doctorId || !slotDate || !slotTime) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slotDate);
+        const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slotTime);
+
+        if (!validDate || !validTime) {
+            return res.status(400).json({ success: false, message: "Invalid date or time format" });
+        }
+
+        // Update the slot in the database
+        await req.app.locals.db.execute(
+            'UPDATE slots SET doctor_id = ?, slot_date = ?, slot_time = ? WHERE id = ?',
+            [doctorId, slotDate, slotTime, id] // Cập nhật trường tại đây
+        );
+
+        res.json({ success: true, message: "Slot updated successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// API to delete a slot
+const deleteSlot = async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Slot ID is required" });
+        }
+
+        // Delete the slot from the database
+        await req.app.locals.db.execute('DELETE FROM slots WHERE id = ?', [id]);
+
+        res.json({ success: true, message: "Slot deleted successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+// API to get all slots
+const allSlot = async (req, res) => {
+    try {
+        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots');
+
+        res.json({ success: true, slots });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// API to get a slot by ID
+const getSlotById = async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Slot ID is required" });
+        }
+
+        const [slot] = await req.app.locals.db.execute('SELECT * FROM slots WHERE id = ?', [id]);
+
+        if (slot.length === 0) {
+            return res.status(404).json({ success: false, message: "Slot not found" });
+        }
+
+        res.json({ success: true, slot: slot[0] });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 
 export {
     loginAdmin,
@@ -128,5 +254,10 @@ export {
     appointmentCancel,
     addDoctor,
     allDoctors,
-    adminDashboard
+    adminDashboard,
+    addSlot,
+    updateSlot,
+    deleteSlot,
+    allSlot,
+    getSlotById
 }

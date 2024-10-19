@@ -7,7 +7,8 @@ import appointmentModel from "../models/appointmentModel.js";
 import { v2 as cloudinary } from 'cloudinary'
 import stripe from "stripe";
 import razorpay from 'razorpay';
-import db from '../config/mysql.js';
+import nodemailer from 'nodemailer';
+
 
 // Gateway Initialize
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
@@ -152,47 +153,87 @@ const updateProfile = async (req, res) => {
 const bookAppointment = async (req, res) => {
     try {
         const { userId, docId, slotDate, slotTime } = req.body;
+        const dateSlot = new Date(slotDate);
+        const formattedDate = `${dateSlot.getFullYear()}-${(dateSlot.getMonth() + 1).toString().padStart(2, '0')}-${dateSlot.getDate().toString().padStart(2, '0')}`;
 
+        // Kiểm tra bác sĩ có sẵn không
         const [doctors] = await req.app.locals.db.execute(
-            "SELECT * FROM doctors WHERE id = ?",
+            "SELECT * FROM doctors WHERE id = ? and available = 1",
             [docId]
+        );
+
+        // Kiểm tra người dùng
+        const [users] = await req.app.locals.db.execute(
+            "SELECT * FROM users WHERE id = ?",
+            [userId]
         );
 
         if (doctors.length === 0) {
             return res.json({ success: false, message: 'Doctor Not Available' });
         }
 
-        const doctor = doctors[0];
-        let slots_booked = JSON.parse(doctor.slots_booked || "{}");
-
-        if (slots_booked[slotDate]?.includes(slotTime)) {
-            return res.json({ success: false, message: 'Slot Not Available' });
-        }
-
-        slots_booked[slotDate] = slots_booked[slotDate] || [];
-        slots_booked[slotDate].push(slotTime);
-
-        const [user] = await req.app.locals.db.execute(
-            "SELECT * FROM users WHERE id = ?",
-            [userId]
+        // Kiểm tra slot
+        const [slot] = await req.app.locals.db.execute(
+            "SELECT * FROM slots WHERE slot_date = ? and slot_time = ? and doctor_id = ?",
+            [formattedDate, slotTime, docId]
         );
 
+        const now = new Date(Date.now());
+        const dateNow = now.toISOString().slice(0, 19).replace('T', ' ');
+
+        // Chèn vào bảng appointments
         await req.app.locals.db.execute(
-            "INSERT INTO appointments (userId, docId, userData, docData, amount, slotTime, slotDate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            [userId, docId, JSON.stringify(user[0]), JSON.stringify(doctor), doctor.fees, slotTime, slotDate, Date.now()]
+            "INSERT INTO appointments (userId, slotId, amount, date) VALUES (?, ?, ?, ?)",
+            [userId, slot[0].id, 1, dateNow]
         );
 
+        // Cập nhật trạng thái slot
         await req.app.locals.db.execute(
-            "UPDATE doctors SET slots_booked = ? WHERE id = ?",
-            [JSON.stringify(slots_booked), docId]
+            "UPDATE slots SET is_booked = 1 WHERE id = ?",
+            [slot[0].id]
         );
 
-        res.json({ success: true, message: 'Appointment Booked' });
+        // Gửi email thông báo
+        const transporter = nodemailer.createTransport({
+            service: 'gmail', // Hoặc dịch vụ bạn muốn sử dụng
+            auth: {
+                user: 'purplerose2305@gmail.com', // Thay đổi với email của bạn
+                pass: 'vtsvzroezxsrvvze', // Thay đổi với mật khẩu của bạn
+            },
+        });
+
+        const mailOptions = {
+            from: 'nhakhoa@gmail.com', // Your email address
+            to: users[0].email, // User's email address
+            subject: 'Appointment Booked Successfully',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        You have successfully booked an appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${formattedDate}</strong> at <strong>${slotTime}</strong>.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Please make sure to arrive on time for your appointment.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Thank you!
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                    </p>
+                </div>
+            `,
+        };
+
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: 'Appointment Booked and Email Sent' });
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
+
 
 
 
@@ -243,8 +284,31 @@ const listAppointment = async (req, res) => {
     try {
         const { userId } = req.body;
 
+        // Câu truy vấn để lấy thông tin chi tiết về các cuộc hẹn
         const [appointments] = await req.app.locals.db.execute(
-            "SELECT * FROM appointments WHERE userId = ?",
+            `SELECT 
+                a.id AS appointment_id,
+                u.name AS user_name,
+                u.image,
+                u.address AS user_address,
+                s.slot_date,
+                s.slot_time,
+                d.name AS doctor_name,
+                d.speciality,
+                a.amount,
+                a.cancelled,
+                a.payment,
+                a.isCompleted
+            FROM 
+                appointments a
+            JOIN 
+                users u ON a.userId = u.id
+            JOIN 
+                slots s ON a.slotId = s.id
+            JOIN 
+                doctors d ON s.doctor_id = d.id
+            WHERE 
+                a.userId = ?`, // Thêm điều kiện để chỉ lấy các cuộc hẹn của userId cụ thể
             [userId]
         );
 
@@ -254,6 +318,7 @@ const listAppointment = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 
 // API to make payment of appointment using razorpay
@@ -364,6 +429,16 @@ const verifyStripe = async (req, res) => {
 
 }
 
+const allSlotUser = async (req, res) => {
+    try {
+        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots');
+        res.json({ success: true, slots });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export {
     loginUser,
     registerUser,
@@ -375,5 +450,6 @@ export {
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
-    verifyStripe
+    verifyStripe,
+    allSlotUser
 }
