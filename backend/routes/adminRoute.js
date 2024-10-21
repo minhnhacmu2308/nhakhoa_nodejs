@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   loginAdmin, appointmentsAdmin, appointmentCancel, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot,addService
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -34,11 +34,12 @@ adminRouter.get('/createTable', async (req, res) => {
 
 adminRouter.post("/login", loginAdmin)
 adminRouter.post("/add-doctor", authAdmin, upload.single('image'), addDoctor)
-adminRouter.get("/appointments", authAdmin, appointmentsAdmin)
+adminRouter.post("/add-service", authAdmin, upload.single('image'), addService)
+adminRouter.get("/appointments", appointmentsAdmin)
 adminRouter.post("/cancel-appointment", authAdmin, appointmentCancel)
 adminRouter.get("/all-doctors", authAdmin, allDoctors)
 adminRouter.post("/change-availability", authAdmin, changeAvailablity)
-adminRouter.get("/dashboard", authAdmin, adminDashboard)
+adminRouter.get("/dashboard", adminDashboard)
 adminRouter.get("/all-slot", authAdmin, allSlot)
 adminRouter.post("/add-slot", authAdmin, addSlot)
 adminRouter.post("/update-slot", authAdmin, updateSlot)

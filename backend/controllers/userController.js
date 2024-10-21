@@ -184,7 +184,7 @@ const bookAppointment = async (req, res) => {
         // Chèn vào bảng appointments
         await req.app.locals.db.execute(
             "INSERT INTO appointments (userId, slotId, amount, date) VALUES (?, ?, ?, ?)",
-            [userId, slot[0].id, 1, dateNow]
+            [userId, slot[0].id, doctors[0].fees, dateNow]
         );
 
         // Cập nhật trạng thái slot
@@ -195,7 +195,7 @@ const bookAppointment = async (req, res) => {
 
         // Gửi email thông báo
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // Hoặc dịch vụ bạn muốn sử dụng
+            service: 'gmail',
             auth: {
                 user: 'purplerose2305@gmail.com', // Thay đổi với email của bạn
                 pass: 'vtsvzroezxsrvvze', // Thay đổi với mật khẩu của bạn
@@ -203,7 +203,7 @@ const bookAppointment = async (req, res) => {
         });
 
         const mailOptions = {
-            from: 'nhakhoa@gmail.com', // Your email address
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>', // Your email address
             to: users[0].email, // User's email address
             subject: 'Appointment Booked Successfully',
             html: `

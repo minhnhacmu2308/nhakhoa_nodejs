@@ -32,7 +32,7 @@ const loginDoctor = async (req, res) => {
 const appointmentsDoctor = async (req, res) => {
     try {
         const { docId } = req.body;
-        const [appointments] = await req.app.locals.db.execute('SELECT * FROM appointments WHERE docId = ?', [docId]);
+        const [appointments] = await req.app.locals.db.execute('SELECT * FROM appointments WHERE id= ?', [docId]);
 
         res.json({ success: true, appointments });
     } catch (error) {

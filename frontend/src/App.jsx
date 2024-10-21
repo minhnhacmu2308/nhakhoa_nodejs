@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Doctors from './pages/Doctors'
+import Services from './pages/Services'
 import Login from './pages/Login'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -30,6 +31,7 @@ const App = () => {
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/verify' element={<Verify />} />
+        <Route path='/services' element={<Services />} />
       </Routes>
       <Footer />
     </div>
