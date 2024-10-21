@@ -28,7 +28,7 @@ const loginAdmin = async (req, res) => {
 // API to get all appointments list
 const appointmentsAdmin = async (req, res) => {
     try {
-        const [appointments] = await req.app.locals.db.execute('SELECT * FROM appointments');
+        const [appointments] = await req.app.locals.db.execute('SELECT a.*,b.name patname,c.slot_date,c.slot_time,d.name docname FROM appointments a left join users b on a.userId = b.id left join slots c on a.slotId = c.id left join doctors d on c.doctor_id = d.id ');
         res.json({ success: true, appointments });
     } catch (error) {
         console.log(error);
@@ -81,6 +81,32 @@ const addDoctor = async (req, res) => {
         );
 
         res.json({ success: true, message: 'Doctor Added' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API for adding Service
+const addService = async (req, res) => {
+    try {
+        const { title, sortdes } = req.body;
+        const imageFile = req.file;
+
+        if (!title || !sortdes) {
+            return res.json({ success: false, message: "Missing Infor" });
+        }
+
+
+        const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+        const imageUrl = imageUpload.secure_url;
+
+        await req.app.locals.db.execute(
+            'INSERT INTO services (title, image, shortdes, description) VALUES (?, ?, ?, ?)',
+            [title, imageUrl, sortdes, sortdes]
+        );
+
+        res.json({ success: true, message: 'Service Added' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -259,5 +285,6 @@ export {
     updateSlot,
     deleteSlot,
     allSlot,
-    getSlotById
+    getSlotById,
+    addService
 }

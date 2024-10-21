@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Admin/Dashboard';
 import AllAppointments from './pages/Admin/AllAppointments';
 import AddDoctor from './pages/Admin/AddDoctor';
+import AddService from './pages/Admin/AddService';
 import AddSlot from './pages/Admin/AddSlot';
 import DoctorsList from './pages/Admin/DoctorsList';
 import Login from './pages/Login';
@@ -32,6 +33,7 @@ const App = () => {
           <Route path='/admin-dashboard' element={<Dashboard />} />
           <Route path='/all-appointments' element={<AllAppointments />} />
           <Route path='/add-doctor' element={<AddDoctor />} />
+          <Route path='/add-service' element={<AddService />} />
           <Route path='/add-slot' element={<AddSlot />} />
           <Route path='/doctor-list' element={<DoctorsList />} />
           <Route path='/doctor-dashboard' element={<DoctorDashboard />} />

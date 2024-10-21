@@ -10,6 +10,7 @@ const AppContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
 
     const [doctors, setDoctors] = useState([])
+    const [services, setServices] = useState([]);
     const [slots, setSlots] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : '')
     const [userData, setUserData] = useState(false)
@@ -33,7 +34,26 @@ const AppContextProvider = (props) => {
 
     }
 
-    // Getting Doctors using API
+    // Getting Services using API
+    const getServicesData = async () => {
+
+        try {
+
+            const { data } = await axios.get(backendUrl + '/api/service/list')
+            if (data.success) {
+                setServices(data.services)
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            console.log(error)
+            toast.error(error.message)
+        }
+
+    }
+
+    // Getting Slots using API
     const getSlotsData = async () => {
 
         try {
@@ -76,6 +96,7 @@ const AppContextProvider = (props) => {
 
     useEffect(() => {
         getDoctosData()
+        getServicesData()
         getSlotsData()
     }, [])
 
@@ -87,6 +108,7 @@ const AppContextProvider = (props) => {
 
     const value = {
         doctors, getDoctosData,
+        services,getServicesData,
         slots, getSlotsData,
         currencySymbol,
         backendUrl,

@@ -21,30 +21,64 @@ const AllAppointments = () => {
       <p className='mb-3 text-lg font-medium'>All Appointments</p>
 
       <div className='bg-white border rounded text-sm max-h-[80vh] overflow-y-scroll'>
-        <div className='hidden sm:grid grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] grid-flow-col py-3 px-6 border-b'>
-          <p>#</p>
-          <p>Patient</p>
-          <p>Age</p>
-          <p>Date & Time</p>
-          <p>Doctor</p>
-          <p>Fees</p>
-          <p>Action</p>
+      <div className="overflow-x-auto">
+  <table className="min-w-full table-auto border-collapse">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="px-6 py-3 border-b">#</th>
+        <th className="px-6 py-3 border-b text-left">Patient</th>
+        <th className="px-6 py-3 border-b text-left">Date & Time</th>
+        <th className="px-6 py-3 border-b text-left">Doctor</th>
+        <th className="px-6 py-3 border-b text-left">Fees</th>
+        <th className="px-6 py-3 border-b text-left">Payment</th>
+        <th className="px-6 py-3 border-b text-left">Complete</th>
+        <th className="px-6 py-3 border-b">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {appointments.map((item, index) => (
+        <tr className="hover:bg-gray-50" key={index}>
+          <td className="px-6 py-3 border-b text-center">{index + 1}</td>
+          <td className="px-6 py-3 border-b text-left">
+            <div className="flex items-center gap-2">
+              <p>{item.patname}</p>
+            </div>
+          </td>
+          <td className="px-6 py-3 border-b text-left">
+            {item.slot_date.slice(0, 10).split('-').reverse().join('-')} {item.slot_time}
+          </td>
+          <td className="px-6 py-3 border-b text-left">
+            <div className="flex items-center gap-2 ml-5">
+              <p>{item.docname}</p>
+            </div>
+          </td>
+          <td className="px-6 py-3 border-b text-left">{currency}{item.amount}</td>
+          <td className="px-6 py-3 border-b text-left">
+            {item.payment === 0 ? 'Chưa thanh toán' : 'Đã thanh toán'}
+          </td>
+          <td className="px-6 py-3 border-b text-left">
+            {item.isCompleted === 0 ? 'Chưa hoàn thành' : 'Đã hoàn thành'}
+          </td>
+          <td className="px-6 py-3 border-b text-center">
+            {item.cancelled ? (
+              <p className="text-red-400 text-xs font-medium">Cancelled</p>
+            ) : item.isCompleted ? (
+              <p className="text-green-500 text-xs font-medium">Completed</p>
+            ) : (
+              <img
+                onClick={() => cancelAppointment(item._id)}
+                className="w-6 cursor-pointer"
+                src={assets.cancel_icon}
+                alt="Cancel"
+              />
+            )}
+          </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        {appointments.map((item, index) => (
-          <div className='flex flex-wrap justify-between max-sm:gap-2 sm:grid sm:grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50' key={index}>
-            <p className='max-sm:hidden'>{index+1}</p>
-            <div className='flex items-center gap-2'>
-              <img src={item.userData.image} className='w-8 rounded-full' alt="" /> <p>{item.userData.name}</p>
-            </div>
-            <p className='max-sm:hidden'>{calculateAge(item.userData.dob)}</p>
-            <p>{slotDateFormat(item.slotDate)}, {item.slotTime}</p>
-            <div className='flex items-center gap-2'>
-              <img src={item.docData.image} className='w-8 rounded-full bg-gray-200' alt="" /> <p>{item.docData.name}</p>
-            </div>
-            <p>{currency}{item.amount}</p>
-            {item.cancelled ? <p className='text-red-400 text-xs font-medium'>Cancelled</p> : item.isCompleted ? <p className='text-green-500 text-xs font-medium'>Completed</p> : <img onClick={() => cancelAppointment(item._id)} className='w-10 cursor-pointer' src={assets.cancel_icon} alt="" />}
-          </div>
-        ))}
+
       </div>
 
     </div>
