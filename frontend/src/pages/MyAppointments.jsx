@@ -11,6 +11,8 @@ const MyAppointments = () => {
     const navigate = useNavigate()
 
     const [appointments, setAppointments] = useState([])
+    const [loadingAppointmentId, setLoadingAppointmentId] = useState(null);
+
     const [payment, setPayment] = useState('')
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -36,26 +38,25 @@ const MyAppointments = () => {
         }
     }
 
-    // Function to cancel appointment Using API
     const cancelAppointment = async (appointmentId) => {
-
         try {
-
-            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } })
+            setLoadingAppointmentId(appointmentId); // Set loading state
+            console.log("appointmentId", appointmentId);
+            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } });
 
             if (data.success) {
-                toast.success(data.message)
-                getUserAppointments()
+                toast.success(data.message);
+                getUserAppointments();
             } else {
-                toast.error(data.message)
+                toast.error(data.message);
             }
-
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            console.log(error);
+            toast.error(error.message);
+        } finally {
+            setLoadingAppointmentId(null); // Reset loading state
         }
-
-    }
+    };
 
     const initPay = (order) => {
         const options = {
@@ -138,20 +139,27 @@ const MyAppointments = () => {
                             <p className='text-[#262626] text-base font-semibold'>{item.doctor_name}</p>
                             <p>{item.speciality}</p>
                             <p className='text-[#464646] font-medium mt-1'>Address:</p>
-                            <p className=''>{item.user_address}</p>
+                            <p className=''>{item.doctor_address}</p>
+                            <p className='text-[#464646] font-medium mt-1'>Servive:</p>
+                            <p className=''>{item.service_name}</p>
                             <p className=' mt-1'><span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span> {slotDateFormat(item.slot_date)} |  {item.slot_time}</p>
                         </div>
                         <div></div>
                         <div className='flex flex-col gap-2 justify-end text-sm text-center'>
-                            {!item.cancelled && !item.payment && !item.isCompleted && payment !== item.appointment_id && <button onClick={() => setPayment(item.appointment_id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
-                            {/* {!item.cancelled && !item.payment && !item.isCompleted && payment === item.appointment_id && <button onClick={() => appointmentStripe(item.appointment_id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.stripe_logo} alt="" /></button>}
-                            {!item.cancelled && !item.payment && !item.isCompleted && payment === item.appointment_id && <button onClick={() => appointmentRazorpay(item.appointment_id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.razorpay_logo} alt="" /></button>}
-                            {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-[#696969]  bg-[#EAEFFF]'>Paid</button>}
 
-                            {item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>} */}
+                            {item.isCompleted === 1 && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>}
 
-                            {!item.cancelled && !item.isCompleted && <button onClick={() => cancelAppointment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'>Cancel appointment</button>}
-                            {/* {item.cancelled && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>} */}
+                            {!item.cancelled && !item.isCompleted && (
+                                <button
+                                    onClick={() => cancelAppointment(item.appointment_id)}
+                                    className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
+                                    disabled={loadingAppointmentId === item.appointment_id} // Disable button if loading
+                                >
+                                    {loadingAppointmentId === item.appointment_id ? "Cancelling..." : "Cancel appointment"}
+                                </button>
+                            )}
+
+                            {item.cancelled === 1 && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>}
                         </div>
                     </div>
                 ))}

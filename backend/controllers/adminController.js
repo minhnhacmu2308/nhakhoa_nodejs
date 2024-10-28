@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
+import nodemailer from 'nodemailer';
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -37,13 +38,132 @@ const appointmentsAdmin = async (req, res) => {
 };
 
 
-// API for appointment cancellation
+// API for admin to cancel appointment
 const appointmentCancel = async (req, res) => {
     try {
         const { appointmentId } = req.body;
+
+        // Lấy thông tin cuộc hẹn
+        const [appointments] = await req.app.locals.db.execute(
+            'SELECT * FROM appointments WHERE id = ?',
+            [appointmentId]
+        );
+
+        if (appointments.length === 0) {
+            return res.json({ success: false, message: 'Appointment not found' });
+        }
+
+        const { userId, doctor_id, date } = appointments[0];
+
+        // Cập nhật trạng thái của cuộc hẹn
         await req.app.locals.db.execute('UPDATE appointments SET cancelled = 1 WHERE id = ?', [appointmentId]);
 
-        res.json({ success: true, message: 'Appointment Cancelled' });
+        const { slotId } = appointments[0];
+
+        // Lấy thông tin người dùng và bác sĩ
+        const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [userId]);
+        const [slots] = await req.app.locals.db.execute("SELECT * FROM slots WHERE id = ?", [slotId]);
+        const [doctors] = await req.app.locals.db.execute("SELECT * FROM doctors WHERE id = ?", [slots[0].doctor_id]);
+
+        // Thiết lập và gửi email thông báo hủy
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
+            to: users[0].email,
+            subject: 'Appointment Cancelled by Admin',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        We regret to inform you that your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${date}</strong> has been cancelled by our administrative team.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        If you would like to reschedule, please contact us or visit our website.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        We apologize for any inconvenience caused.
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        For further assistance, feel free to reach out to us via this email or our support phone number.
+                    </p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: 'Appointment Cancelled and Email Sent' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+// API for marking an appointment as completed
+const appointmentComplete = async (req, res) => {
+    try {
+        const { appointmentId } = req.body;
+
+        // Lấy thông tin cuộc hẹn
+        const [appointments] = await req.app.locals.db.execute(
+            'SELECT * FROM appointments WHERE id = ?',
+            [appointmentId]
+        );
+
+        if (appointments.length === 0) {
+            return res.json({ success: false, message: 'Appointment not found' });
+        }
+
+        const { userId, doctor_id, date } = appointments[0];
+        const { slotId } = appointments[0];
+        // Cập nhật trạng thái của cuộc hẹn
+        await req.app.locals.db.execute('UPDATE appointments SET isCompleted = 1 WHERE id = ?', [appointmentId]);
+
+        // Lấy thông tin người dùng và bác sĩ
+        const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [userId]);
+        const [slots] = await req.app.locals.db.execute("SELECT * FROM slots WHERE id = ?", [slotId]);
+        const [doctors] = await req.app.locals.db.execute("SELECT * FROM doctors WHERE id = ?", [slots[0].doctor_id]);
+
+        // Thiết lập và gửi email thông báo hoàn tất
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
+            to: users[0].email,
+            subject: 'Appointment Completed',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        We are pleased to inform you that your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${date}</strong> has been successfully completed.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Thank you for choosing our services! If you have any questions or need further assistance, feel free to contact us.
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        We look forward to seeing you again!
+                    </p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: 'Appointment Completed and Email Sent' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -278,6 +398,7 @@ export {
     loginAdmin,
     appointmentsAdmin,
     appointmentCancel,
+    appointmentComplete,
     addDoctor,
     allDoctors,
     adminDashboard,

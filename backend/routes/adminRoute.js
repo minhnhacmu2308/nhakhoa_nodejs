@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   loginAdmin, appointmentsAdmin, appointmentCancel, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot,addService
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -15,6 +15,7 @@ adminRouter.get('/createTable', async (req, res) => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT NOT NULL,
       slotId INT NOT NULL,
+      serviceId INT NOT NULL,
       amount DECIMAL(10, 2) NOT NULL,
       date DATETIME NOT NULL,
       cancelled BOOLEAN DEFAULT false,
@@ -37,6 +38,7 @@ adminRouter.post("/add-doctor", authAdmin, upload.single('image'), addDoctor)
 adminRouter.post("/add-service", authAdmin, upload.single('image'), addService)
 adminRouter.get("/appointments", appointmentsAdmin)
 adminRouter.post("/cancel-appointment", authAdmin, appointmentCancel)
+adminRouter.post("/complete-appointment", authAdmin, appointmentComplete)
 adminRouter.get("/all-doctors", authAdmin, allDoctors)
 adminRouter.post("/change-availability", authAdmin, changeAvailablity)
 adminRouter.get("/dashboard", adminDashboard)

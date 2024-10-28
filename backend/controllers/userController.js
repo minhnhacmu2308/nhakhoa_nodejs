@@ -129,7 +129,7 @@ const updateProfile = async (req, res) => {
 
         await req.app.locals.db.execute(
             "UPDATE users SET name = ?, phone = ?, address = ?, dob = ?, gender = ? WHERE id = ?",
-            [name, phone, JSON.stringify(address), dob, gender, userId]
+            [name, phone, address, dob, gender, userId]
         );
 
         if (imageFile) {
@@ -149,10 +149,12 @@ const updateProfile = async (req, res) => {
     }
 };
 
+
 // API to book appointment 
 const bookAppointment = async (req, res) => {
     try {
-        const { userId, docId, slotDate, slotTime } = req.body;
+        const { userId, docId, slotDate, slotTime, serviceId } = req.body;
+        console.log("req.body", req.body)
         const dateSlot = new Date(slotDate);
         const formattedDate = `${dateSlot.getFullYear()}-${(dateSlot.getMonth() + 1).toString().padStart(2, '0')}-${dateSlot.getDate().toString().padStart(2, '0')}`;
 
@@ -183,8 +185,8 @@ const bookAppointment = async (req, res) => {
 
         // Chèn vào bảng appointments
         await req.app.locals.db.execute(
-            "INSERT INTO appointments (userId, slotId, amount, date) VALUES (?, ?, ?, ?)",
-            [userId, slot[0].id, doctors[0].fees, dateNow]
+            "INSERT INTO appointments (userId, slotId, amount, date, serviceId) VALUES (?, ?, ?, ?, ?)",
+            [userId, slot[0].id, doctors[0].fees, dateNow, serviceId]
         );
 
         // Cập nhật trạng thái slot
@@ -197,9 +199,9 @@ const bookAppointment = async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'purplerose2305@gmail.com', // Thay đổi với email của bạn
-                pass: 'vtsvzroezxsrvvze', // Thay đổi với mật khẩu của bạn
-            },
+                user: process.env.EMAIL_USER, // Địa chỉ email của bạn
+                pass: process.env.EMAIL_PASS  // Mật khẩu hoặc token ứng dụng của bạn
+            }
         });
 
         const mailOptions = {
@@ -235,13 +237,97 @@ const bookAppointment = async (req, res) => {
 };
 
 
+// API to edit appointment
+const editAppointment = async (req, res) => {
+    try {
+        const { appointmentId, slotDate, slotTime, serviceId } = req.body;
+        console.log("req.body", req.body);
+
+        const dateSlot = new Date(slotDate);
+        const formattedDate = `${dateSlot.getFullYear()}-${(dateSlot.getMonth() + 1).toString().padStart(2, '0')}-${dateSlot.getDate().toString().padStart(2, '0')}`;
+
+        // Kiểm tra cuộc hẹn có tồn tại không
+        const [appointment] = await req.app.locals.db.execute(
+            "SELECT * FROM appointments WHERE id = ?",
+            [appointmentId]
+        );
+
+        if (appointment.length === 0) {
+            return res.json({ success: false, message: 'Appointment not found' });
+        }
+
+        // Kiểm tra thông tin người dùng và bác sĩ
+        const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [appointment[0].userId]);
+
+
+        // Kiểm tra slot có sẵn không
+        const [slot] = await req.app.locals.db.execute(
+            "SELECT * FROM slots WHERE slot_date = ? AND slot_time = ? AND doctor_id = ? AND is_booked = 0",
+            [formattedDate, slotTime, appointment[0].doctor_id]
+        );
+
+        if (slot.length === 0) {
+            return res.json({ success: false, message: 'Selected slot is not available' });
+        }
+
+        // Cập nhật thông tin cuộc hẹn
+        await req.app.locals.db.execute(
+            "UPDATE appointments SET slotId = ?, serviceId = ? WHERE id = ?",
+            [slot[0].id, serviceId, appointmentId]
+        );
+
+        // Cập nhật trạng thái slot mới và cũ
+        await req.app.locals.db.execute("UPDATE slots SET is_booked = 1 WHERE id = ?", [slot[0].id]);
+        await req.app.locals.db.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", [appointment[0].slotId]);
+
+        // Thiết lập và gửi email thông báo
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
+            to: users[0].email,
+            subject: 'Appointment Updated Successfully',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Your appointment with Dr. <strong>${doctors[0].name}</strong> has been successfully updated to <strong>${formattedDate}</strong> at <strong>${slotTime}</strong>.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Please make sure to arrive on time for your appointment.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Thank you!
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                    </p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: 'Appointment updated successfully and Email Sent' });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 
 
 // API to cancel appointment
 const cancelAppointment = async (req, res) => {
     try {
         const { userId, appointmentId } = req.body;
+        console.log(userId, appointmentId);
 
+        // Lấy thông tin cuộc hẹn
         const [appointments] = await req.app.locals.db.execute(
             "SELECT * FROM appointments WHERE id = ?",
             [appointmentId]
@@ -251,27 +337,51 @@ const cancelAppointment = async (req, res) => {
             return res.json({ success: false, message: 'Unauthorized action' });
         }
 
-        await req.app.locals.db.execute(
-            "UPDATE appointments SET cancelled = true WHERE id = ?",
-            [appointmentId]
-        );
+        // Cập nhật trạng thái của cuộc hẹn và slot
+        await req.app.locals.db.execute("UPDATE appointments SET cancelled = true WHERE id = ?", [appointmentId]);
+        const { slotId } = appointments[0];
+        await req.app.locals.db.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", [slotId]);
 
-        const { docId, slotDate, slotTime } = appointments[0];
+        // Lấy thông tin người dùng và bác sĩ
+        const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [userId]);
+        const [slots] = await req.app.locals.db.execute("SELECT * FROM slots WHERE id = ?", [slotId]);
+        const [doctors] = await req.app.locals.db.execute("SELECT * FROM doctors WHERE id = ?", [slots[0].doctor_id]);
 
-        const [doctors] = await req.app.locals.db.execute(
-            "SELECT * FROM doctors WHERE id = ?",
-            [docId]
-        );
+        // Thiết lập và gửi email thông báo hủy
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
 
-        let slots_booked = JSON.parse(doctors[0].slots_booked || "{}");
-        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+        const mailOptions = {
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
+            to: users[0].email,
+            subject: 'Appointment Cancelled Successfully',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${appointments[0].date}</strong> has been successfully cancelled.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        We're sorry to hear you won't be able to make it. If you'd like to reschedule, please visit our website or contact us directly.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Thank you for using our service.
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                    </p>
+                </div>
+            `,
+        };
 
-        await req.app.locals.db.execute(
-            "UPDATE doctors SET slots_booked = ? WHERE id = ?",
-            [JSON.stringify(slots_booked), docId]
-        );
+        await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment Cancelled' });
+        res.json({ success: true, message: 'Appointment Cancelled and Email Sent' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -293,8 +403,10 @@ const listAppointment = async (req, res) => {
                 u.address AS user_address,
                 s.slot_date,
                 s.slot_time,
+                sv.title AS service_name,
                 d.name AS doctor_name,
                 d.speciality,
+                d.address AS doctor_address,
                 a.amount,
                 a.cancelled,
                 a.payment,
@@ -307,8 +419,12 @@ const listAppointment = async (req, res) => {
                 slots s ON a.slotId = s.id
             JOIN 
                 doctors d ON s.doctor_id = d.id
+            JOIN 
+                services sv ON a.serviceId = sv.id
             WHERE 
-                a.userId = ?`, // Thêm điều kiện để chỉ lấy các cuộc hẹn của userId cụ thể
+                a.userId = ? 
+            ORDER BY 
+                s.slot_date ASC, s.slot_time ASC`,
             [userId]
         );
 
@@ -318,7 +434,6 @@ const listAppointment = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
-
 
 
 // API to make payment of appointment using razorpay
@@ -439,17 +554,150 @@ const allSlotUser = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log("email", email)
+        // Kiểm tra email đầu vào
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+
+        // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu không
+        const [user] = await req.app.locals.db.execute("SELECT * FROM users WHERE email = ?", [email]);
+
+        if (user.length === 0) {
+            return res.status(404).json({ success: false, message: "User with this email does not exist" });
+        }
+
+        // Mật khẩu mới là "123456789"
+        const newPassword = generatePassword();
+
+        // Mã hóa mật khẩu mới
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Cập nhật mật khẩu mới trong cơ sở dữ liệu
+        await req.app.locals.db.execute(
+            "UPDATE users SET password = ? WHERE email = ?",
+            [hashedPassword, email]
+        );
+
+        // Cấu hình transporter để gửi email bằng Nodemailer
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER, // Địa chỉ email của bạn
+                pass: process.env.EMAIL_PASS  // Mật khẩu hoặc token ứng dụng của bạn
+            }
+        });
+
+        // Tạo nội dung email
+        const mailOptions = {
+            from: "nhakhoa@gmail.com",
+            to: email,
+            subject: 'Your New Password',
+            text: `Your password has been reset. Your new password is: ${newPassword}`
+        };
+
+        // Gửi email chứa mật khẩu mới
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error("Error sending email: ", err);
+                return res.status(500).json({ success: false, message: "Error sending email" });
+            } else {
+                console.log("Email sent: " + info.response);
+            }
+        });
+
+        res.json({ success: true, message: "New password sent to your email" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        // Xác thực token từ request headers
+        const token = req.headers.token;
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Giải mã token để lấy thông tin người dùng
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("decoded", decoded)
+        const userId = decoded.id;
+        console.log("userId", userId)
+
+        // Kiểm tra xem người dùng có tồn tại trong cơ sở dữ liệu
+        const [user] = await req.app.locals.db.execute(
+            'SELECT * FROM users WHERE id = ?',
+            [userId]
+        );
+        console.log("[user]", [user])
+        if (!user.length) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        console.log("user[0].password)", user[0].password)
+        console.log("req.body", req.body)
+        // Kiểm tra mật khẩu cũ có khớp không
+        const isMatch = await bcrypt.compare(oldPassword, user[0].password);
+        console.log("isMatch", isMatch)
+        if (!isMatch) {
+            return res.json({ success: false, message: 'Incorrect old password' });
+        }
+
+        // Kiểm tra độ dài mật khẩu mới
+        if (newPassword.length < 8) {
+            return res.json({ success: false, message: 'New password must be at least 8 characters' });
+        }
+
+        // Hash mật khẩu mới
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Cập nhật mật khẩu mới vào cơ sở dữ liệu
+        await req.app.locals.db.execute(
+            'UPDATE users SET password = ? WHERE id = ?',
+            [hashedPassword, userId]
+        );
+
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+    let password = '';
+
+    for (let i = 0; i < 8; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        password += chars[randomIndex];
+    }
+
+    return password;
+};
+
 export {
     loginUser,
     registerUser,
     getProfile,
     updateProfile,
+    forgotPassword,
     bookAppointment,
     listAppointment,
     cancelAppointment,
+    editAppointment,
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
     verifyStripe,
-    allSlotUser
+    allSlotUser,
+    changePassword
 }

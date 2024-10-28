@@ -93,6 +93,27 @@ const AdminContextProvider = (props) => {
 
     }
 
+    // Function to cancel appointment using API
+    const completeAppointment = async (appointmentId) => {
+
+        try {
+
+            const { data } = await axios.post(backendUrl + '/api/admin/complete-appointment', { appointmentId }, { headers: { aToken } })
+
+            if (data.success) {
+                toast.success(data.message)
+                getAllAppointments()
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            toast.error(error.message)
+            console.log(error)
+        }
+
+    }
+
     // Getting Admin Dashboard data from Database using API
     const getDashData = async () => {
         try {
@@ -121,6 +142,7 @@ const AdminContextProvider = (props) => {
         getAllAppointments,
         getDashData,
         cancelAppointment,
+        completeAppointment,
         dashData
     }
 
