@@ -10,9 +10,13 @@ const MyAppointments = () => {
     const [appointments, setAppointments] = useState([])
     const [slotArr, setSlotArr] = useState([])
     const [loadingAppointmentId, setLoadingAppointmentId] = useState(null)
-    // const [availableSlotTimes, setAvailableSlotTimes] = useState([])
+    const [loadingEditAppointmentId, setLoadingEditAppointmentId] = useState(null)
     const [slotDate, setSlotDate] = useState('');
-    const [slotTime, setSlotTime] = useState('')
+    const [slotTime, setSlotTime] = useState('');
+    const [serviceId, setServiceId] = useState();
+    const [doctorId, setDoctorId] = useState();
+    const [appointmentId, setAppointmentId] = useState();
+
 
     const slotDateFormat = (dateSlot) => {
         const date = new Date(dateSlot)
@@ -21,13 +25,15 @@ const MyAppointments = () => {
     }
 
     const getSlotTimesByDate = (slotArr, date) => {
-        console.log("date", date)
-        console.log("slotArr11", slotArr)
-        console.log("slotTime", slotTime)
         return slotArr
             .filter(slot => slot.slot_date === date && slot.is_booked === 0)
             .map(slot => slot.slot_time);
     };
+
+    const setSlotDateAsyn = (data) => {
+        setSlotDate(data)
+        setSlotTime('')
+    }
 
     const getUserAppointments = async () => {
         try {
@@ -41,6 +47,39 @@ const MyAppointments = () => {
         } catch (error) {
             console.log(error)
             toast.error(error.message)
+        }
+    }
+
+    const editAppointment = async (index) => {
+        setLoadingEditAppointmentId(appointmentId);
+        if (!token) {
+            toast.warning('Login to book appointment');
+            return navigate('/login');
+        }
+
+        if (!doctorId || !slotDate || !slotTime || !serviceId) {
+            toast.warning('Please select all required options before booking an appointment');
+            return;
+        }
+
+        try {
+            const { data } = await axios.post(
+                backendUrl + '/api/user/edit-appointment',
+                { doctorId, slotDate, slotTime, serviceId, appointmentId },
+                { headers: { token } }
+            );
+            if (data.success) {
+                toast.success("Appointment updated successfully")
+                getUserAppointments();
+                getSlotsData();
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.message);
+        } finally {
+            setLoadingEditAppointmentId(null);
         }
     }
 
@@ -64,15 +103,16 @@ const MyAppointments = () => {
     }
 
     const handleEditToggle = (index) => {
+        console.log("indexx", index)
+        console.log("appointments", appointments)
         const updatedAppointments = [...appointments]
         console.log("updatedAppointments", updatedAppointments)
-        console.log("updatedAppointments[index].doctor_id", updatedAppointments[index].doctor_id)
-        console.log("updatedAppointments[index]", updatedAppointments[index])
-        console.log("slots", slots)
         setSlotDate(updatedAppointments[index].slot_date)
         setSlotTime(updatedAppointments[index].slot_time)
+        setServiceId(updatedAppointments[index].service_id)
+        setDoctorId(updatedAppointments[index].doctor_id)
+        setAppointmentId(updatedAppointments[index].appointment_id)
         const slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(updatedAppointments[index].doctor_id, 10))
-        console.log("slotDoc1", slotDoc)
         const obj = {
             doctor_id: updatedAppointments[index].doctor_id,
             id: updatedAppointments[index].service_id,
@@ -82,15 +122,11 @@ const MyAppointments = () => {
         }
         slotDoc.push(obj);
         setSlotArr(slotDoc);
-        console.log("slotArr", slotArr)
         updatedAppointments[index].isEdit = !updatedAppointments[index].isEdit
         updatedAppointments.forEach((appointment, i) => {
             updatedAppointments[i].isEdit = (i === index);
         });
         setAppointments(updatedAppointments)
-        // const a = getSlotTimesByDate(slotDoc, updatedAppointments[index].slot_date);
-        // console.log("a", a)
-        // setAvailableSlotTimes(a);
     }
 
     const handleCancelEditToggle = (index) => {
@@ -99,27 +135,6 @@ const MyAppointments = () => {
         setAppointments(updatedAppointments)
     }
     const availableSlotTimes = getSlotTimesByDate(slotArr, slotDate);
-
-    const saveEdit = async (index) => {
-        const appointment = appointments[index]
-        try {
-            const { data } = await axios.put(
-                backendUrl + `/api/user/update-appointment`,
-                { appointmentId: appointment.appointment_id, /* Thêm dữ liệu cần chỉnh sửa */ },
-                { headers: { token } }
-            )
-
-            if (data.success) {
-                toast.success("Appointment updated successfully")
-                getUserAppointments()
-            } else {
-                toast.error(data.message)
-            }
-        } catch (error) {
-            console.log(error)
-            toast.error(error.message)
-        }
-    }
 
     useEffect(() => {
         if (token) {
@@ -153,7 +168,7 @@ const MyAppointments = () => {
                                 <p className=''>{item.doctor_address}</p>
                                 <p className='text-[#464646] font-medium mt-1'>Service:</p>
                                 {item.isEdit ? (<select
-
+                                    onChange={e => setServiceId(e.target.value)} value={serviceId}
                                     className='border rounded px-2 py-2 w-full'
                                     required
                                 >
@@ -180,7 +195,7 @@ const MyAppointments = () => {
                                                 return (
                                                     <div
                                                         key={index}
-                                                        onClick={() => setSlotDate(appt.slot_date)}
+                                                        onClick={() => setSlotDateAsyn(appt.slot_date)}
                                                         className={`text-center py-1 px-3 rounded-full cursor-pointer ${slotDate === appt.slot_date ? 'bg-primary text-white' : 'border border-[#DDDDDD]'}`}
                                                     >
                                                         <p>{dayOfWeek}</p>
@@ -195,7 +210,7 @@ const MyAppointments = () => {
                                                         <p
                                                             onClick={() => setSlotTime(time)}
                                                             key={index}
-                                                            className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer ${time === item.slot_time ? 'bg-primary text-white' : 'text-[#949494] border border-[#B4B4B4]'}`}
+                                                            className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer ${time === slotTime ? 'bg-primary text-white' : 'text-[#949494] border border-[#B4B4B4]'}`}
                                                         >
                                                             {time.toLowerCase()}
                                                         </p>
@@ -212,7 +227,7 @@ const MyAppointments = () => {
                             <div className='flex flex-col gap-2 justify-end text-sm text-center'>
                                 {item.isCompleted === 1 && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>}
 
-                                {!item.cancelled && !item.isCompleted && (
+                                {!item.cancelled && !item.isCompleted && new Date(item.slot_date) >= new Date() && (
                                     <button
                                         onClick={() => cancelAppointment(item.appointment_id)}
                                         className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
@@ -223,20 +238,23 @@ const MyAppointments = () => {
                                 )}
 
                                 {item.cancelled === 1 && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>}
-                                {item.cancelled === 1 || item.isCompleted === 1 ? null : <button
-                                    onClick={() => item.isEdit ? handleCancelEditToggle(index) : handleEditToggle(index)}
-                                    className='text-blue-500 py-2 border rounded hover:bg-blue-500 hover:text-white transition-all duration-300'
-                                >
-                                    {item.isEdit ? "Cancel Edit" : "Edit"}
-                                </button>
+                                {item.cancelled === 1 || item.isCompleted === 1 ? null :
+                                    new Date(item.slot_date) >= new Date() ?
+                                        <button
+                                            onClick={() => item.isEdit ? handleCancelEditToggle(index) : handleEditToggle(index)}
+                                            className='text-blue-500 py-2 border rounded hover:bg-blue-500 hover:text-white transition-all duration-300'
+                                        >
+                                            {item.isEdit ? "Cancel Edit" : "Edit"}
+                                        </button> : null
                                 }
 
                                 {item.isEdit && (
                                     <button
-                                        onClick={() => saveEdit(index)}
+                                        onClick={() => editAppointment(index)}
                                         className='text-green-500 py-2 border rounded hover:bg-green-500 hover:text-white transition-all duration-300'
+                                        disabled={loadingEditAppointmentId === item.appointment_id}
                                     >
-                                        Save
+                                        {loadingEditAppointmentId === item.appointment_id ? "Saving..." : "Save"}
                                     </button>
                                 )}
                             </div>

@@ -154,7 +154,6 @@ const updateProfile = async (req, res) => {
 const bookAppointment = async (req, res) => {
     try {
         const { userId, docId, slotDate, slotTime, serviceId } = req.body;
-        console.log("req.body", req.body)
         const dateSlot = new Date(slotDate);
         const formattedDate = `${dateSlot.getFullYear()}-${(dateSlot.getMonth() + 1).toString().padStart(2, '0')}-${dateSlot.getDate().toString().padStart(2, '0')}`;
 
@@ -245,11 +244,20 @@ const bookAppointment = async (req, res) => {
 // API to edit appointment
 const editAppointment = async (req, res) => {
     try {
-        const { appointmentId, slotDate, slotTime, serviceId } = req.body;
-        console.log("req.body", req.body);
+        const { appointmentId, slotDate, slotTime, serviceId, doctorId } = req.body;
 
         const dateSlot = new Date(slotDate);
         const formattedDate = `${dateSlot.getFullYear()}-${(dateSlot.getMonth() + 1).toString().padStart(2, '0')}-${dateSlot.getDate().toString().padStart(2, '0')}`;
+
+        // Kiểm tra bác sĩ có sẵn không
+        const [doctors] = await req.app.locals.db.execute(
+            "SELECT * FROM doctors WHERE id = ? and available = 1",
+            [doctorId]
+        );
+
+        if (doctors.length === 0) {
+            return res.json({ success: false, message: 'Doctor Not Available' });
+        }
 
         // Kiểm tra cuộc hẹn có tồn tại không
         const [appointment] = await req.app.locals.db.execute(
@@ -257,19 +265,24 @@ const editAppointment = async (req, res) => {
             [appointmentId]
         );
 
+        // Kiểm tra slot
+        const [slot] = await req.app.locals.db.execute(
+            "SELECT * FROM slots WHERE slot_date = ? and slot_time = ? and doctor_id = ?",
+            [formattedDate, slotTime, doctorId]
+        );
+
+        if (slot[0].id === appointment[0].slotId && appointment[0].serviceId === serviceId) {
+            return res.json({ success: false, message: 'No changes' });
+        }
+
         if (appointment.length === 0) {
             return res.json({ success: false, message: 'Appointment not found' });
         }
 
+
         // Kiểm tra thông tin người dùng và bác sĩ
         const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [appointment[0].userId]);
 
-
-        // Kiểm tra slot có sẵn không
-        const [slot] = await req.app.locals.db.execute(
-            "SELECT * FROM slots WHERE slot_date = ? AND slot_time = ? AND doctor_id = ? AND is_booked = 0",
-            [formattedDate, slotTime, appointment[0].doctor_id]
-        );
 
         if (slot.length === 0) {
             return res.json({ success: false, message: 'Selected slot is not available' });
@@ -282,8 +295,10 @@ const editAppointment = async (req, res) => {
         );
 
         // Cập nhật trạng thái slot mới và cũ
-        await req.app.locals.db.execute("UPDATE slots SET is_booked = 1 WHERE id = ?", [slot[0].id]);
-        await req.app.locals.db.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", [appointment[0].slotId]);
+        if (slot[0].id !== appointment[0].slotId) {
+            await req.app.locals.db.execute("UPDATE slots SET is_booked = 1 WHERE id = ?", [slot[0].id]);
+            await req.app.locals.db.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", [appointment[0].slotId]);
+        }
 
         // Thiết lập và gửi email thông báo
         const transporter = nodemailer.createTransport({
