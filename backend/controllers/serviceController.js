@@ -7,7 +7,7 @@ import appointmentModel from "../models/appointmentModel.js";
 // API to get all services list for Frontend
 const serviceList = async (req, res) => {
     try {
-        const [services] = await req.app.locals.db.execute('SELECT id, title, image, shortdes , price FROM services');
+        const [services] = await req.app.locals.db.execute('SELECT id, title, image, shortdes, description , price FROM services');
         res.json({ success: true, services });
     } catch (error) {
         console.log(error);

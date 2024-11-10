@@ -184,7 +184,7 @@ const bookAppointment = async (req, res) => {
 
         const [services] = await req.app.locals.db.execute(
             "SELECT * FROM services WHERE id = ?",
-            [userId]
+            [serviceId]
         );
 
         // Chèn vào bảng appointments

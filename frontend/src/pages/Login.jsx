@@ -59,16 +59,16 @@ const Login = () => {
     <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
       <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5E5E5E] text-sm shadow-lg'>
         <p className='text-2xl font-semibold'>
-          {state === 'Sign Up' ? 'Create Account' : state === 'Forgot password' ? 'Forgot Password' : 'Login'}
+          {state === 'Sign Up' ? 'Đăng ký tài khoản' : state === 'Forgot password' ? 'Forgot Password' : 'Login'}
         </p>
         {state === 'Forgot password'
-          ? <p>Please enter your email to reset your password</p>
-          : <p>Please {state === 'Sign Up' ? 'sign up' : 'log in'} to book appointment</p>
+          ? <p>Vui lòng nhập Email để lấy lại mật khẩu</p>
+          : <p>Vui lòng {state === 'Sign Up' ? 'đăng ký' : 'đăng nhập'} để đặt lịch hẹn</p>
         }
 
         {state === 'Sign Up' && (
           <div className='w-full '>
-            <p>Full Name</p>
+            <p>Họ tên</p>
             <input onChange={(e) => setName(e.target.value)} value={name} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="text" required />
           </div>
         )}
@@ -80,23 +80,23 @@ const Login = () => {
 
         {state !== 'Forgot password' && (
           <div className='w-full '>
-            <p>Password</p>
+            <p>Mật khẩu</p>
             <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
           </div>
         )}
 
         <button className='bg-primary text-white w-full py-2 my-2 rounded-md text-base'>
-          {state === 'Sign Up' ? 'Create account' : state === 'Forgot password' ? 'Send reset link' : 'Login'}
+          {state === 'Sign Up' ? 'Đăng ký tài khoản' : state === 'Forgot password' ? 'Gửi email' : 'Đăng nhập'}
         </button>
 
         {state === 'Sign Up' ? (
-          <p>Already have an account? <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Login here</span></p>
+          <p>Bạn đã có tài khoản? <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Đăng nhập ngay</span></p>
         ) : state === 'Forgot password' ? (
-          <p>Remembered your password? <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Click here to log in</span></p>
+          <p> <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Trở lại đăng nhập</span></p>
         ) : (
           <>
-            <p>Create a new account? <span onClick={() => setState('Sign Up')} className='text-primary underline cursor-pointer'>Click here</span></p>
-            <p><span onClick={() => setState('Forgot password')} className='text-primary underline cursor-pointer'>Forgot password</span></p>
+            <p>Đăng ký tài khoản? <span onClick={() => setState('Sign Up')} className='text-primary underline cursor-pointer'>Tại đây</span></p>
+            <p><span onClick={() => setState('Forgot password')} className='text-primary underline cursor-pointer'>Quên mật khẩu</span></p>
           </>
         )}
       </div>

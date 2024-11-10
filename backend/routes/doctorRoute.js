@@ -50,6 +50,24 @@ doctorRouter.get('/createTable-slot', async (req, res) => {
   }
 });
 
+doctorRouter.get('/createTable-docser', async (req, res) => {
+  const sql = `
+    CREATE TABLE IF NOT EXISTS doc_ser (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      doctor_id INT NOT NULL,
+      service_id INT NOT NULL 
+    )
+  `;
+
+  try {
+    await req.app.locals.db.execute(sql);
+    res.send('Bảng doctors đã được tạo hoặc đã tồn tại');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Đã xảy ra lỗi khi tạo bảng');
+  }
+});
+
 doctorRouter.get('/createTable-service', async (req, res) => {
   const sql = `
     CREATE TABLE IF NOT EXISTS services (

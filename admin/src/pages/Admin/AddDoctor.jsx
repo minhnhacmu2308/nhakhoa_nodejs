@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState,useEffect } from 'react'
 import { assets } from '../../assets/assets'
 import { toast } from 'react-toastify'
 import axios from 'axios'
@@ -12,65 +12,79 @@ const AddDoctor = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [experience, setExperience] = useState('1 Year')
-    const [fees, setFees] = useState('')
     const [about, setAbout] = useState('')
-    const [speciality, setSpeciality] = useState('General physician')
+    const [speciality, setSpeciality] = useState('Chuyên khoa trẻ em')
     const [degree, setDegree] = useState('')
     const [address1, setAddress1] = useState('')
     const [address2, setAddress2] = useState('')
+    const [selectedServices, setSelectedServices] = useState([]);
+
 
     const { backendUrl } = useContext(AppContext)
-    const { aToken } = useContext(AdminContext)
+    const {services,aToken, getAllServices } = useContext(AdminContext)
+
+
+    // Gọi API lấy tất cả dịch vụ
+    useEffect(() => {
+        if (aToken) {
+            getAllServices()
+        }
+    }, [aToken]);
+
 
     const onSubmitHandler = async (event) => {
-        event.preventDefault()
-
+        event.preventDefault();
+    
         try {
-
             if (!docImg) {
-                return toast.error('Image Not Selected')
+                return toast.error('Image Not Selected');
             }
-
+    
             const formData = new FormData();
-
-            formData.append('image', docImg)
-            formData.append('name', name)
-            formData.append('email', email)
-            formData.append('password', password)
-            formData.append('experience', experience)
-            formData.append('fees', Number(fees))
-            formData.append('about', about)
-            formData.append('speciality', speciality)
-            formData.append('degree', degree)
-            formData.append('address', address1)
-
+    
+            formData.append('image', docImg);
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('experience', experience);
+            formData.append('about', about);
+            formData.append('speciality', speciality);
+            formData.append('degree', degree);
+            formData.append('address', address1);
+    
+            // Thêm các dịch vụ vào formData
+            selectedServices.forEach(serviceId => {
+                formData.append('services[]', serviceId);  // Truyền dịch vụ dưới dạng mảng
+            });
+    
             // console log formdata            
             formData.forEach((value, key) => {
                 console.log(`${key}: ${value}`);
             });
-
-            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { headers: { aToken } })
+    
+            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { headers: { aToken } });
             if (data.success) {
-                toast.success(data.message)
-                setDocImg(false)
-                setName('')
-                setPassword('')
-                setEmail('')
-                setAddress1('')
-                setAddress2('')
-                setDegree('')
-                setAbout('')
-                setFees('')
+                toast.success(data.message);
+                // Reset form
+                setDocImg(false);
+                setName('');
+                setPassword('');
+                setEmail('');
+                setAddress1('');
+                setAddress2('');
+                setDegree('');
+                setAbout('');
+                setSelectedServices([]);  // Reset selected services
             } else {
-                toast.error(data.message)
+                toast.error(data.message);
             }
-
+    
         } catch (error) {
-            toast.error(error.message)
-            console.log(error)
+            toast.error(error.message);
+            console.log(error);
         }
-
-    }
+    };
+    
 
     return (
         <form onSubmit={onSubmitHandler} className='m-5 w-full'>
@@ -121,11 +135,6 @@ const AddDoctor = () => {
                             </select>
                         </div>
 
-                        <div className='flex-1 flex flex-col gap-1'>
-                            <p>Fees</p>
-                            <input onChange={e => setFees(e.target.value)} value={fees} className='border rounded px-3 py-2' type="number" placeholder='Doctor fees' required />
-                        </div>
-
                     </div>
 
                     <div className='w-full lg:flex-1 flex flex-col gap-4'>
@@ -133,12 +142,8 @@ const AddDoctor = () => {
                         <div className='flex-1 flex flex-col gap-1'>
                             <p>Speciality</p>
                             <select onChange={e => setSpeciality(e.target.value)} value={speciality} className='border rounded px-2 py-2'>
-                                <option value="General physician">General physician</option>
-                                <option value="Gynecologist">Gynecologist</option>
-                                <option value="Dermatologist">Dermatologist</option>
-                                <option value="Pediatricians">Pediatricians</option>
-                                <option value="Neurologist">Neurologist</option>
-                                <option value="Gastroenterologist">Gastroenterologist</option>
+                                <option value="Chuyên khoa trẻ em">Chuyên khoa trẻ em</option>
+                                <option value="Chuyên khoa người lớn">Chuyên khoa người lớn</option>
                             </select>
                         </div>
 
@@ -152,11 +157,26 @@ const AddDoctor = () => {
                             <p>Address</p>
                             <input onChange={e => setAddress1(e.target.value)} value={address1} className='border rounded px-3 py-2' type="text" placeholder='Address 1' required />
                         </div>
+                        <div className='flex-1 flex flex-col gap-1'>
+                        <p>Giữ phím Ctrl để có thể chọn nhiều dịch vụ</p>
+                        <select 
+                            multiple 
+                            value={selectedServices} 
+                            onChange={e => setSelectedServices(Array.from(e.target.selectedOptions, option => option.value))} 
+                            className='border rounded px-2 py-2'>
+                            {services.map(service => (
+                                <option key={service.id} value={service.id}>
+                                    {service.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
 
                     </div>
 
                 </div>
-
+                                
                 <div>
                     <p className='mt-4 mb-2'>About Doctor</p>
                     <textarea onChange={e => setAbout(e.target.value)} value={about} className='w-full px-4 pt-2 border rounded' rows={5} placeholder='write about doctor'></textarea>

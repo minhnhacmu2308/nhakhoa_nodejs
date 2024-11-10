@@ -150,10 +150,10 @@ const MyAppointments = () => {
 
     return (
         <div>
-            <p className='pb-3 mt-12 text-lg font-medium text-gray-600 border-b'>My appointments</p>
+            <p className='pb-3 mt-12 text-lg font-medium text-gray-600 border-b'>Lịch sử cuộc hẹn</p>
             <div className=''>
                 {appointments.length === 0 ? (
-                    <p className='text-center text-gray-500'>No appointments available</p>
+                    <p className='text-center text-gray-500'>Không có dữ liệu</p>
                 ) : appointments.map((item, index) => {
                     const formattedVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
                     return (
@@ -164,9 +164,9 @@ const MyAppointments = () => {
                             <div className='flex-1 text-sm text-[#5E5E5E]'>
                                 <p className='text-[#262626] text-base font-semibold'>{item.doctor_name}</p>
                                 <p>{item.speciality}</p>
-                                <p className='text-[#464646] font-medium mt-1'>Address:</p>
+                                <p className='text-[#464646] font-medium mt-1'>Địa chỉ:</p>
                                 <p className=''>{item.doctor_address}</p>
-                                <p className='text-[#464646] font-medium mt-1'>Service:</p>
+                                <p className='text-[#464646] font-medium mt-1'>Dịch vụ:</p>
                                 {item.isEdit ? (<select
                                     onChange={e => setServiceId(e.target.value)} value={serviceId}
                                     className='border rounded px-2 py-2 w-full'
@@ -183,7 +183,7 @@ const MyAppointments = () => {
                                 }
 
                                 <p className='mt-1'>
-                                    <span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span>
+                                    <span className='text-sm text-[#3C3C3C] font-medium'>Thời gian:</span>
                                     {item.isEdit ? (
                                         <>   <div className='flex gap-3 items-center w-full overflow-x-scroll mt-2'>
                                             {slotArr.length !== 0 && [...new Map(slotArr.filter(x => x.is_booked === 0).map(appt => [new Date(appt.slot_date).toDateString(), appt])).values()].map((appt, index) => {

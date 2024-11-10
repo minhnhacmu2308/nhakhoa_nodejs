@@ -99,18 +99,18 @@ const MyProfile = () => {
                     <hr className='bg-[#ADADAD] h-[1px] border-none' />
 
                     <div>
-                        <p className='text-gray-600 underline mt-3'>CONTACT INFORMATION</p>
+                        <p className='text-gray-600 underline mt-3'>Thông tin liên hệ</p>
                         <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-[#363636]'>
-                            <p className='font-medium'>Email id:</p>
+                            <p className='font-medium'>Email:</p>
                             <p className='text-blue-500'>{userData.email}</p>
-                            <p className='font-medium'>Phone:</p>
+                            <p className='font-medium'>Điện thoại:</p>
 
                             {isEdit
                                 ? <input className='bg-gray-50 max-w-52' type="text" onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))} value={userData.phone} />
                                 : <p className='text-blue-500'>{userData.phone}</p>
                             }
 
-                            <p className='font-medium'>Address:</p>
+                            <p className='font-medium'>Địa chỉ:</p>
 
                             {isEdit
                                 ? <input className='bg-gray-50' type="text" onChange={(e) => setUserData(prev => ({ ...prev, address: e.target.value }))} value={userData.address} />
@@ -119,20 +119,20 @@ const MyProfile = () => {
                         </div>
                     </div>
                     <div>
-                        <p className='text-[#797979] underline mt-3'>BASIC INFORMATION</p>
+                        <p className='text-[#797979] underline mt-3'>Thông tin cá nhân</p>
                         <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-gray-600'>
-                            <p className='font-medium'>Gender:</p>
+                            <p className='font-medium'>Giới tính:</p>
 
                             {isEdit
                                 ? <select className='max-w-20 bg-gray-50' onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))} value={userData.gender} >
-                                    <option value="Not Selected">Not Selected</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
+                                    <option value="Not Selected">Chọn giới tính</option>
+                                    <option value="Male">Nam</option>
+                                    <option value="Female">Nữ</option>
                                 </select>
                                 : <p className='text-gray-500'>{userData.gender}</p>
                             }
 
-                            <p className='font-medium'>Birthday:</p>
+                            <p className='font-medium'>Ngày sinh:</p>
 
                             {isEdit
                                 ? <input className='max-w-28 bg-gray-50' type='date' onChange={(e) => setUserData(prev => ({ ...prev, dob: e.target.value }))} value={userData.dob} />
@@ -146,23 +146,23 @@ const MyProfile = () => {
             {/* Hiển thị form đổi mật khẩu khi bấm nút Change Password */}
             {isChangePassword && (
                 <div>
-                    <p className='text-[#797979] underline mt-3'>CHANGE PASSWORD</p>
+                    <p className='text-[#797979] underline mt-3'>Đổi mật khẩu</p>
                     <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-gray-600'>
-                        <p className='font-medium'>Old Password:</p>
+                        <p className='font-medium'>Mật khẩu cũ:</p>
                         <input className='bg-gray-50 max-w-52' type="password" onChange={(e) => setOldPassword(e.target.value)} value={oldPassword} />
 
-                        <p className='font-medium'>New Password:</p>
+                        <p className='font-medium'>Mật khẩu mới:</p>
                         <input className='bg-gray-50 max-w-52' type="password" onChange={(e) => setNewPassword(e.target.value)} value={newPassword} />
 
-                        <p className='font-medium'>Confirm New Password:</p>
+                        <p className='font-medium'>Nhập lại mật khẩu:</p>
                         <input className='bg-gray-50 max-w-52' type="password" onChange={(e) => setConfirmNewPassword(e.target.value)} value={confirmNewPassword} />
                     </div>
                     <div className='flex items-center gap-4 mt-10'>
                         <button onClick={updatePasswordHandler} className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all'>
-                            Update Password
+                            Thay đổi mật khẩu
                         </button>
                         <button onClick={() => setIsChangePassword(false)} className='border border-gray-400 px-8 py-2 rounded-full hover:bg-gray-400 hover:text-white transition-all'>
-                            Back to Profile
+                            Trở lại
                         </button>
                     </div>
                 </div>
@@ -172,11 +172,11 @@ const MyProfile = () => {
             {!isChangePassword && (
                 <div className='mt-10'>
                     {isEdit
-                        ? <button onClick={updateUserProfileData} className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all'>Save information</button>
-                        : <button onClick={() => setIsEdit(true)} className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all'>Edit</button>
+                        ? <button onClick={updateUserProfileData} className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all'>Lưu</button>
+                        : <button onClick={() => setIsEdit(true)} className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all'>Thay đổi</button>
                     }
 
-                    <button onClick={() => setIsChangePassword(true)} className='border border-primary px-8 py-2 mt-3 rounded-full hover:bg-primary hover:text-white transition-all'>Change Password</button>
+                    <button onClick={() => setIsChangePassword(true)} className='border border-primary px-8 py-2 mt-3 rounded-full hover:bg-primary hover:text-white transition-all'>Đổi mật khẩu</button>
                 </div>
             )}
         </div>

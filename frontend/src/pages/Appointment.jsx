@@ -109,7 +109,7 @@ const Appointment = () => {
 
                     {/* ----- Doc About ----- */}
                     <div>
-                        <p className='flex items-center gap-1 text-sm font-medium text-[#262626] mt-3'>About <img className='w-3' src={assets.info_icon} alt="" /></p>
+                        <p className='flex items-center gap-1 text-sm font-medium text-[#262626] mt-3'>Thông tin bác sĩ <img className='w-3' src={assets.info_icon} alt="" /></p>
                         <p className='text-sm text-gray-600 max-w-[700px] mt-1'>{docInfo.about}</p>
                     </div>
 
@@ -121,13 +121,13 @@ const Appointment = () => {
             {/* Booking slots */}
             <div className='sm:ml-72 sm:pl-4 mt-8 font-medium text-[#565656]'>
                 <div className='flex-1 flex flex-col gap-1 w-60'>
-                    <p>Select service</p>
+                    <p>Dịch vụ</p>
                     <select
                         onChange={e => setServiceId(e.target.value)} value={serviceId}
                         className='border rounded px-2 py-2 w-full'
                         required
                     >
-                        <option value="" >Select service</option>
+                        <option value="" >Chọn dịch vụ</option>
                         {services.map(item => {
                             const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price);
                             return (
@@ -136,12 +136,12 @@ const Appointment = () => {
                         })}
                     </select>
                 </div>
-                <p className="mt-8" >Booking slots</p>
+                <p className="mt-8" >Thời gian</p>
                 <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
                     {slotDocs.length && [...new Map(slotDocs.filter(x => x.is_booked == 0).map(item => [new Date(item.slot_date).toDateString(), item])).values()].map((item, index) => {
                         // Convert item.slot_date to the abbreviated day of the week
                         const date = new Date(item.slot_date);
-                        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                        const daysOfWeek = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
                         const dayOfWeek = daysOfWeek[date.getDay()];
 
                         // Format the date as dd-mm-yy

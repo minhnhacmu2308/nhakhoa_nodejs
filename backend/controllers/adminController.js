@@ -174,10 +174,10 @@ const appointmentComplete = async (req, res) => {
 // API for adding Doctor
 const addDoctor = async (req, res) => {
     try {
-        const { name, email, password, speciality, degree, experience, about, fees, address } = req.body;
+        const { name, email, password, speciality, degree, experience, about, address, services } = req.body;
         const imageFile = req.file;
 
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !address || !services) {
             return res.json({ success: false, message: "Missing Details" });
         }
 
@@ -195,25 +195,41 @@ const addDoctor = async (req, res) => {
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
         const imageUrl = imageUpload.secure_url;
 
-        await req.app.locals.db.execute(
-            'INSERT INTO doctors (name, email, password, image, speciality, degree, experience, about, fees, address, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [name, email, hashedPassword, imageUrl, speciality, degree, experience, about, fees, address, new Date()]
+        // Lưu thông tin bác sĩ vào bảng doctors
+        const [doctorResult] = await req.app.locals.db.execute(
+            'INSERT INTO doctors (name, email, password, image, speciality, degree, experience, about, address, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, email, hashedPassword, imageUrl, speciality, degree, experience, about, address, new Date()]
         );
 
-        res.json({ success: true, message: 'Doctor Added' });
+        const doctorId = doctorResult.insertId;
+
+        // Thêm dịch vụ vào bảng doc_ser
+        const serviceInsertPromises = services.map(serviceId => {
+            return req.app.locals.db.execute(
+                'INSERT INTO doc_ser (doctor_id, service_id) VALUES (?, ?)',
+                [doctorId, serviceId]
+            );
+        });
+
+        // Chờ tất cả các dịch vụ được thêm vào bảng doc_ser
+        await Promise.all(serviceInsertPromises);
+
+        res.json({ success: true, message: 'Doctor Added and Services Assigned' });
+
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
 
+
 // API for adding Service
 const addService = async (req, res) => {
     try {
-        const { title, sortdes } = req.body;
+        const { title, sortdes,fees,describe } = req.body;
         const imageFile = req.file;
 
-        if (!title || !sortdes) {
+        if (!title || !fees || !sortdes) {
             return res.json({ success: false, message: "Missing Infor" });
         }
 
@@ -222,11 +238,37 @@ const addService = async (req, res) => {
         const imageUrl = imageUpload.secure_url;
 
         await req.app.locals.db.execute(
-            'INSERT INTO services (title, image, shortdes, description) VALUES (?, ?, ?, ?)',
-            [title, imageUrl, sortdes, sortdes]
+            'INSERT INTO services (title, image, shortdes, description, price) VALUES (?, ?, ?, ?, ?)',
+            [title, imageUrl, sortdes, describe, fees]
         );
 
         res.json({ success: true, message: 'Service Added' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API for adding New
+const addNew = async (req, res) => {
+    try {
+        const { title, sortdes,describe } = req.body;
+        const imageFile = req.file;
+
+        if (!title || !describe || !sortdes) {
+            return res.json({ success: false, message: "Missing Infor" });
+        }
+
+
+        const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+        const imageUrl = imageUpload.secure_url;
+
+        await req.app.locals.db.execute(
+            'INSERT INTO news (title, image, shortdes, description) VALUES (?, ?, ?, ?)',
+            [title, imageUrl, sortdes, describe]
+        );
+
+        res.json({ success: true, message: 'Thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -237,7 +279,7 @@ const addService = async (req, res) => {
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
     try {
-        const [doctors] = await req.app.locals.db.execute('SELECT id, name, speciality, degree, experience, about, fees, available, address, image FROM doctors');
+        const [doctors] = await req.app.locals.db.execute('SELECT id, name, speciality, degree, experience, about, available, address, image FROM doctors');
         res.json({ success: true, doctors });
     } catch (error) {
         console.log(error);
@@ -407,5 +449,6 @@ export {
     deleteSlot,
     allSlot,
     getSlotById,
-    addService
+    addService,
+    addNew
 }
