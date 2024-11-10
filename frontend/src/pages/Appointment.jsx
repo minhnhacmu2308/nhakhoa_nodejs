@@ -26,15 +26,12 @@ const Appointment = () => {
     const fetchDocInfo = async () => {
         const docInfo = doctors.find((doc) => doc.id === parseInt(docId, 10))
         setDocInfo(docInfo)
-        console.log(slots)
-        console.log(docId)
         const slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(docId, 10))
-        console.log(slotDoc)
         setSlotDocs(slotDoc);
-        console.log(slotDate)
     }
 
     const getSlotTimesByDate = (date) => {
+        console.log("check")
         return slotDocs
             .filter(slot => slot.slot_date === date && slot.is_booked === 0)
             .map(slot => slot.slot_time);
@@ -131,9 +128,12 @@ const Appointment = () => {
                         required
                     >
                         <option value="" >Select service</option>
-                        {services.map(item => (
-                            <option key={item.id} value={item.id}>{item.title}</option>
-                        ))}
+                        {services.map(item => {
+                            const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price);
+                            return (
+                                <option key={item.id} value={item.id}>{item.title} - {formattedVNDService}</option>
+                            )
+                        })}
                     </select>
                 </div>
                 <p className="mt-8" >Booking slots</p>

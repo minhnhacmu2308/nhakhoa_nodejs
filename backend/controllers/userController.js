@@ -183,10 +183,15 @@ const bookAppointment = async (req, res) => {
         const now = new Date(Date.now());
         const dateNow = now.toISOString().slice(0, 19).replace('T', ' ');
 
+        const [services] = await req.app.locals.db.execute(
+            "SELECT * FROM services WHERE id = ?",
+            [userId]
+        );
+
         // Chèn vào bảng appointments
         await req.app.locals.db.execute(
             "INSERT INTO appointments (userId, slotId, amount, date, serviceId) VALUES (?, ?, ?, ?, ?)",
-            [userId, slot[0].id, doctors[0].fees, dateNow, serviceId]
+            [userId, slot[0].id, services[0].price, dateNow, serviceId]
         );
 
         // Cập nhật trạng thái slot
@@ -403,7 +408,9 @@ const listAppointment = async (req, res) => {
                 u.address AS user_address,
                 s.slot_date,
                 s.slot_time,
+                s.doctor_id AS doctor_id,
                 sv.title AS service_name,
+                sv.id as service_id,
                 d.name AS doctor_name,
                 d.speciality,
                 d.address AS doctor_address,
@@ -546,7 +553,7 @@ const verifyStripe = async (req, res) => {
 
 const allSlotUser = async (req, res) => {
     try {
-        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots');
+        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots WHERE slot_date > CURRENT_DATE OR (slot_date = CURRENT_DATE AND slot_time > CURRENT_TIME)');
         res.json({ success: true, slots });
     } catch (error) {
         console.log(error);

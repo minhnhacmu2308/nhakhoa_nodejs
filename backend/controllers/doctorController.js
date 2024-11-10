@@ -83,7 +83,7 @@ const appointmentComplete = async (req, res) => {
 // API to get all doctors list for Frontend
 const doctorList = async (req, res) => {
     try {
-        const [doctors] = await req.app.locals.db.execute('SELECT id, name, speciality, degree, experience, about, fees, available, address, image FROM doctors');
+        const [doctors] = await req.app.locals.db.execute('SELECT id, name, speciality, degree, experience, about, available, address, image FROM doctors');
         res.json({ success: true, doctors });
     } catch (error) {
         console.log(error);
@@ -113,7 +113,7 @@ const changeAvailablity = async (req, res) => {
 const doctorProfile = async (req, res) => {
     try {
         const { docId } = req.body;
-        const [profileData] = await req.app.locals.db.execute('SELECT id, name, speciality, fees, address FROM doctors WHERE id = ?', [docId]);
+        const [profileData] = await req.app.locals.db.execute('SELECT id, name, speciality, address FROM doctors WHERE id = ?', [docId]);
 
         res.json({ success: true, profileData });
     } catch (error) {

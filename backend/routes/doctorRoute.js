@@ -16,7 +16,6 @@ doctorRouter.get('/createTable', async (req, res) => {
       experience VARCHAR(255) NOT NULL,
       about TEXT NOT NULL,
       available BOOLEAN DEFAULT true,
-      fees DECIMAL(10, 2) NOT NULL,
       address VARCHAR(255) NOT NULL,
       date DATETIME NOT NULL
     )

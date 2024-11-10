@@ -55,7 +55,6 @@ const AppContextProvider = (props) => {
 
     // Getting Slots using API
     const getSlotsData = async () => {
-
         try {
 
             const { data } = await axios.get(backendUrl + '/api/user/all-slot-user')
@@ -108,7 +107,7 @@ const AppContextProvider = (props) => {
 
     const value = {
         doctors, getDoctosData,
-        services,getServicesData,
+        services, getServicesData,
         slots, getSlotsData,
         currencySymbol,
         backendUrl,

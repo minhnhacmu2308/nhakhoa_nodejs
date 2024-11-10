@@ -57,8 +57,8 @@ const appointmentCancel = async (req, res) => {
 
         // Cập nhật trạng thái của cuộc hẹn
         await req.app.locals.db.execute('UPDATE appointments SET cancelled = 1 WHERE id = ?', [appointmentId]);
-
         const { slotId } = appointments[0];
+        await req.app.locals.db.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", [slotId]);
 
         // Lấy thông tin người dùng và bác sĩ
         const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [userId]);
