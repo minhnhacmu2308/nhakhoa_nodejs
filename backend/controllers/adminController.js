@@ -15,7 +15,11 @@ const loginAdmin = async (req, res) => {
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
             const token = jwt.sign(email + password, process.env.JWT_SECRET);
             res.json({ success: true, token });
-        } else {
+        } else  if (email === process.env.EMP_EMAIL && password === process.env.EMP_PASSWORD) { 
+                const token = jwt.sign(email + password, process.env.JWT_SECRET);
+                res.json({ success: true, token });
+        } 
+        else {
             res.json({ success: false, message: "Invalid credentials" });
         }
     } catch (error) {
@@ -29,7 +33,7 @@ const loginAdmin = async (req, res) => {
 // API to get all appointments list
 const appointmentsAdmin = async (req, res) => {
     try {
-        const [appointments] = await req.app.locals.db.execute('SELECT a.*,b.name patname,c.slot_date,c.slot_time,d.name docname FROM appointments a left join users b on a.userId = b.id left join slots c on a.slotId = c.id left join doctors d on c.doctor_id = d.id ');
+        const [appointments] = await req.app.locals.db.execute('SELECT a.*,b.name patname,c.slot_date,c.slot_time,d.name docname,e.title FROM appointments a left join users b on a.userId = b.id left join slots c on a.slotId = c.id left join doctors d on c.doctor_id = d.id left join services e on a.serviceId = e.id ');
         res.json({ success: true, appointments });
     } catch (error) {
         console.log(error);
@@ -77,21 +81,21 @@ const appointmentCancel = async (req, res) => {
         const mailOptions = {
             from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
             to: users[0].email,
-            subject: 'Appointment Cancelled by Admin',
+            subject: 'Lịch hẹn hủy bởi quản trị viên',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <h2 style="color: #333;">Xin chào ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        We regret to inform you that your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${date}</strong> has been cancelled by our administrative team.
+                        Chúng tôi rất tiếc phải thông báo với bạn rằng cuộc hẹn của bạn với Bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</strong> đã bị đội ngũ hành chính của chúng tôi hủy bỏ.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        If you would like to reschedule, please contact us or visit our website.
+                        Nếu bạn muốn lên lịch lại, vui lòng liên hệ với chúng tôi hoặc truy cập trang web của chúng tôi.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        We apologize for any inconvenience caused.
+                        Chúng tôi xin lỗi vì bất kỳ sự bất tiện nào gây ra.
                     </p>
                     <p style="font-size: 14px; line-height: 1.5; color: #777;">
-                        For further assistance, feel free to reach out to us via this email or our support phone number.
+                        Để được hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email này hoặc số điện thoại hỗ trợ của chúng tôi.
                     </p>
                 </div>
             `,
@@ -99,7 +103,7 @@ const appointmentCancel = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment Cancelled and Email Sent' });
+        res.json({ success: true, message: 'Thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -144,18 +148,18 @@ const appointmentComplete = async (req, res) => {
         const mailOptions = {
             from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
             to: users[0].email,
-            subject: 'Appointment Completed',
+            subject: 'Hoàn thành lịch hẹn',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
                     <h2 style="color: #333;">Hi ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        We are pleased to inform you that your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${date}</strong> has been successfully completed.
+                       Chúng tôi vui mừng thông báo với bạn rằng cuộc hẹn của bạn với Bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</strong> đã diễn ra thành công
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Thank you for choosing our services! If you have any questions or need further assistance, feel free to contact us.
+                        Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi! Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.
                     </p>
                     <p style="font-size: 14px; line-height: 1.5; color: #777;">
-                        We look forward to seeing you again!
+                        Chúng tôi mong được gặp lại bạn!
                     </p>
                 </div>
             `,
@@ -163,7 +167,7 @@ const appointmentComplete = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment Completed and Email Sent' });
+        res.json({ success: true, message: 'Thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -214,13 +218,15 @@ const addDoctor = async (req, res) => {
         // Chờ tất cả các dịch vụ được thêm vào bảng doc_ser
         await Promise.all(serviceInsertPromises);
 
-        res.json({ success: true, message: 'Doctor Added and Services Assigned' });
+        res.json({ success: true, message: 'Thành công' });
 
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
+
+
 
 
 // API for adding Service
@@ -242,7 +248,7 @@ const addService = async (req, res) => {
             [title, imageUrl, sortdes, describe, fees]
         );
 
-        res.json({ success: true, message: 'Service Added' });
+        res.json({ success: true, message: 'Thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -343,7 +349,7 @@ const addSlot = async (req, res) => {
             [doctorId, slotDate, slotTime] // Cập nhật trường tại đây
         );
 
-        res.json({ success: true, message: "Slot added successfully" });
+        res.json({ success: true, message: "Thành công" });
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: error.message });

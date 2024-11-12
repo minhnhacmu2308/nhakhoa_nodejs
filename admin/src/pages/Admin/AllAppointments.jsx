@@ -6,7 +6,7 @@ import { AppContext } from '../../context/AppContext';
 
 const AllAppointments = () => {
   const { aToken, appointments, cancelAppointment, getAllAppointments, completeAppointment } = useContext(AdminContext);
-  const { slotDateFormat, calculateAge, currency } = useContext(AppContext);
+  const {calculateAge, currency } = useContext(AppContext);
 
   useEffect(() => {
     if (aToken) {
@@ -14,9 +14,15 @@ const AllAppointments = () => {
     }
   }, [aToken]);
 
+  const slotDateFormat = (dateSlot) => {
+    const date = new Date(dateSlot)
+    const formattedDate = `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}`
+    return formattedDate
+}
+
   return (
     <div className='w-full max-w-6xl m-5'>
-      <p className='mb-3 text-lg font-medium'>All Appointments</p>
+      <p className='mb-3 text-lg font-medium'>Danh sách lịch hẹn</p>
 
       <div className='bg-white border rounded text-sm max-h-[80vh] overflow-y-scroll'>
         <div className="overflow-x-auto">
@@ -24,12 +30,13 @@ const AllAppointments = () => {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 border-b">#</th>
-                <th className="px-6 py-3 border-b text-left">Patient</th>
-                <th className="px-6 py-3 border-b text-left">Date & Time</th>
-                <th className="px-6 py-3 border-b text-left">Doctor</th>
-                <th className="px-6 py-3 border-b text-left">Fees</th>
+                <th className="px-6 py-3 border-b text-left">Bệnh nhân</th>
+                <th className="px-6 py-3 border-b text-left">Ngày & Giờ</th>
+                <th className="px-6 py-3 border-b text-left">Bác sĩ</th>
+                <th className="px-6 py-3 border-b text-left">Dịch vụ</th>
+                <th className="px-6 py-3 border-b text-left">Giá tiền</th>
                 {/* <th className="px-6 py-3 border-b text-left">Payment</th> */}
-                <th className="px-6 py-3 border-b text-left">Complete</th>
+                <th className="px-6 py-3 border-b text-left">Tình trạng</th>
                 <th className="px-6 py-3 border-b">Action</th>
               </tr>
             </thead>
@@ -43,14 +50,19 @@ const AllAppointments = () => {
                     </div>
                   </td>
                   <td className="px-6 py-3 border-b text-left">
-                    {item.slot_date.slice(0, 10).split('-').reverse().join('-')} {item.slot_time}
+                    {slotDateFormat(item.slot_date).slice(0, 10).split('-').reverse().join('-')} {item.slot_time}
                   </td>
                   <td className="px-6 py-3 border-b text-left">
-                    <div className="flex items-center gap-2 ml-5">
+                    <div className="flex items-center gap-2">
                       <p>{item.docname}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-3 border-b text-left">{currency}{item.amount}</td>
+                  <td className="px-6 py-3 border-b text-left">
+                    <div className="flex items-center gap-2">
+                      <p>{item.title}</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3 border-b text-left">{item.amount}</td>
                   {/* <td className="px-6 py-3 border-b text-left">
                     {item.payment === 0 ? 'Chưa thanh toán' : 'Đã thanh toán'}
                   </td> */}
@@ -59,9 +71,9 @@ const AllAppointments = () => {
                   </td>
                   <td className="px-6 py-3 border-b text-center">
                     {item.cancelled ? (
-                      <p className="text-red-400 text-xs font-medium">Cancelled</p>
+                      <p className="text-red-400 text-xs font-medium">Hủy</p>
                     ) : item.isCompleted ? (
-                      <p className="text-green-500 text-xs font-medium">Completed</p>
+                      <p className="text-green-500 text-xs font-medium">Hoàn thành</p>
                     ) : (
                       <div className="flex justify-center items-center">
                         <img

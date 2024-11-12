@@ -15,6 +15,17 @@ const serviceList = async (req, res) => {
     }
 };
 
+// API to get all services list for Frontend
+const newList = async (req, res) => {
+    try {
+        const [news] = await req.app.locals.db.execute('SELECT id, title, image, shortdes, description  FROM news');
+        res.json({ success: true, news });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 
 // API to get service detail
 const serviceDetail = async (req, res) => {
@@ -65,6 +76,7 @@ const listFeedbackByServiceId = async (req, res) => {
 
 export {
     serviceList,
+    newList,
     serviceDetail,
     listFeedbackByServiceId
 }

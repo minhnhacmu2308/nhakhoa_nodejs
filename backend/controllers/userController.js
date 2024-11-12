@@ -66,6 +66,67 @@ const registerUser = async (req, res) => {
     }
 };
 
+// API thêm người dùng mới
+const addUser = async (req, res) => {
+    try {
+        const { name, email, password, phone, address, gender, dob } = req.body;
+
+        // Kiểm tra dữ liệu bắt buộc
+        if (!name || !email || !password) {
+            return res.json({ success: false, message: 'Thiếu thông tin bắt buộc' });
+        }
+
+        // Kiểm tra email hợp lệ
+        if (!validator.isEmail(email)) {
+            return res.json({ success: false, message: "Vui lòng nhập email hợp lệ" });
+        }
+
+        // Kiểm tra độ dài mật khẩu
+        if (password.length < 8) {
+            return res.json({ success: false, message: "Vui lòng nhập mật khẩu mạnh" });
+        }
+
+        // Mã hóa mật khẩu
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Thêm người dùng mới vào cơ sở dữ liệu
+        await req.app.locals.db.execute(
+            "INSERT INTO users (name, email, password, phone, address, gender, dob) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [name, email, hashedPassword, phone, address, gender, dob]
+        );
+
+        res.json({ success: true, message: 'Thêm người dùng thành công' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: 'Lỗi hệ thống. Vui lòng thử lại sau.' });
+    }
+};
+
+// API chỉnh sửa thông tin người dùng
+const editUser = async (req, res) => {
+    try {
+        const { userId, name, phone, address, dob, gender } = req.body;
+
+        // Kiểm tra dữ liệu bắt buộc
+        if (!userId || !name || !phone || !dob || !gender) {
+            return res.json({ success: false, message: "Thiếu thông tin bắt buộc" });
+        }
+
+        // Cập nhật thông tin người dùng
+        await req.app.locals.db.execute(
+            "UPDATE users SET name = ?, phone = ?, address = ?, dob = ?, gender = ? WHERE id = ?",
+            [name, phone, address, dob, gender, userId]
+        );
+
+        res.json({ success: true, message: 'Cập nhật thông tin người dùng thành công' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: 'Lỗi hệ thống. Vui lòng thử lại sau.' });
+    }
+};
+
+
 
 // API to login user
 const loginUser = async (req, res) => {
@@ -422,7 +483,7 @@ const listAppointment = async (req, res) => {
             `SELECT 
                 a.id AS appointment_id,
                 u.name AS user_name,
-                u.image,
+                d.image,
                 u.address AS user_address,
                 s.slot_date,
                 s.slot_time,
@@ -710,6 +771,16 @@ const generatePassword = () => {
     return password;
 };
 
+const userList = async (req, res) => {
+    try {
+        const [users] = await req.app.locals.db.execute('SELECT * FROM users');
+        res.json({ success: true, users });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Hàm tạo đơn thanh toán MoMo
 const createMoMoPayment = async (req, res) => {
     const { appointmentId } = req.body;
@@ -852,6 +923,9 @@ const ratingAppointment = async (req, res) => {
 export {
     loginUser,
     registerUser,
+    addUser,
+    editUser,
+    userList,
     getProfile,
     updateProfile,
     forgotPassword,

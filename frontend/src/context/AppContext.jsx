@@ -11,6 +11,7 @@ const AppContextProvider = (props) => {
 
     const [doctors, setDoctors] = useState([])
     const [services, setServices] = useState([]);
+    const [news, setNews] = useState([]);
     const [slots, setSlots] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : '')
     const [userData, setUserData] = useState(false)
@@ -42,6 +43,25 @@ const AppContextProvider = (props) => {
             const { data } = await axios.get(backendUrl + '/api/service/list')
             if (data.success) {
                 setServices(data.services)
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            console.log(error)
+            toast.error(error.message)
+        }
+
+    }
+
+    // Getting Services using API
+    const getNewsData = async () => {
+
+        try {
+
+            const { data } = await axios.get(backendUrl + '/api/service/newlist')
+            if (data.success) {
+                setNews(data.news)
             } else {
                 toast.error(data.message)
             }
@@ -97,6 +117,7 @@ const AppContextProvider = (props) => {
         getDoctosData()
         getServicesData()
         getSlotsData()
+        getNewsData()
     }, [])
 
     useEffect(() => {
@@ -108,6 +129,7 @@ const AppContextProvider = (props) => {
     const value = {
         doctors, getDoctosData,
         services, getServicesData,
+        news,getNewsData,
         slots, getSlotsData,
         currencySymbol,
         backendUrl,

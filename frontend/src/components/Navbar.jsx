@@ -32,6 +32,10 @@ const Navbar = () => {
           <li className='py-1'>Dịch vụ</li>
           <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
         </NavLink>
+        <NavLink to='/news' >
+          <li className='py-1'>Tin tức</li>
+          <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
+        </NavLink>
         <NavLink to='/about' >
           <li className='py-1'>Về chúng tôi</li>
           <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />

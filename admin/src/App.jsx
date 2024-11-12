@@ -13,6 +13,7 @@ import AddService from './pages/Admin/AddService';
 import AddNew from './pages/Admin/AddNew';
 import AddSlot from './pages/Admin/AddSlot';
 import DoctorsList from './pages/Admin/DoctorsList';
+import UsersList from './pages/Admin/UsersList';
 import Login from './pages/Login';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import DoctorDashboard from './pages/Doctor/DoctorDashboard';
@@ -38,6 +39,7 @@ const App = () => {
           <Route path='/add-news' element={<AddNew />} />
           <Route path='/add-slot' element={<AddSlot />} />
           <Route path='/doctor-list' element={<DoctorsList />} />
+          <Route path='/user-list' element={<UsersList />} />
           <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
           <Route path='/doctor-appointments' element={<DoctorAppointments />} />
           <Route path='/doctor-profile' element={<DoctorProfile />} />

@@ -120,22 +120,28 @@ const Appointment = () => {
 
             {/* Booking slots */}
             <div className='sm:ml-72 sm:pl-4 mt-8 font-medium text-[#565656]'>
-                <div className='flex-1 flex flex-col gap-1 w-60'>
-                    <p>Dịch vụ</p>
-                    <select
-                        onChange={e => setServiceId(e.target.value)} value={serviceId}
-                        className='border rounded px-2 py-2 w-full'
-                        required
-                    >
-                        <option value="" >Chọn dịch vụ</option>
-                        {services.map(item => {
+            <div className='flex-1 flex flex-col gap-1 w-60'>
+                <p>Dịch vụ</p>
+                <select
+                    onChange={e => setServiceId(e.target.value)} value={serviceId}
+                    className='border rounded px-2 py-2 w-full'
+                    required
+                >
+                    <option value="">Chọn dịch vụ</option>
+                    {services
+                        .filter(item => docInfo.services.split(', ').includes(item.id.toString())) // Lọc dịch vụ theo bác sĩ
+                        .map(item => {
                             const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price);
                             return (
-                                <option key={item.id} value={item.id}>{item.title} - {formattedVNDService}</option>
+                                <option key={item.id} value={item.id}>
+                                    {item.title} - {formattedVNDService}
+                                </option>
                             )
-                        })}
-                    </select>
-                </div>
+                        })
+                    }
+                </select>
+            </div>
+
                 <p className="mt-8" >Thời gian</p>
                 <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
                     {slotDocs.length && [...new Map(slotDocs.filter(x => x.is_booked == 0).map(item => [new Date(item.slot_date).toDateString(), item])).values()].map((item, index) => {

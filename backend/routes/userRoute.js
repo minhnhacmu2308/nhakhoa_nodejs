@@ -1,5 +1,5 @@
 import express from 'express';
-import { ratingAppointment, createMoMoPayment, inputUrl, changePassword, forgotPassword, loginUser, registerUser, getProfile, updateProfile, bookAppointment, listAppointment, editAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, allSlotUser } from '../controllers/userController.js';
+import {ratingAppointment, createMoMoPayment, inputUrl, changePassword, forgotPassword, loginUser, registerUser,addUser, getProfile, updateProfile, bookAppointment, listAppointment, editAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, allSlotUser, userList, editUser } from '../controllers/userController.js';
 import upload from '../middleware/multer.js';
 import authUser from '../middleware/authUser.js';
 const userRouter = express.Router();
@@ -30,6 +30,9 @@ userRouter.get('/createTable', async (req, res) => {
 
 
 userRouter.post("/register", registerUser)
+userRouter.post("/add-user", addUser)
+userRouter.post("/edit-user", editUser)
+userRouter.get("/list", userList)
 userRouter.post("/login", loginUser)
 userRouter.post("/forgot-password", forgotPassword)
 userRouter.post("/update-password", authUser, changePassword)

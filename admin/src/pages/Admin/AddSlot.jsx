@@ -52,12 +52,12 @@ const AddSlot = () => {
 
     return (
         <form onSubmit={onSubmitHandler} className='m-5 w-full'>
-            <p className='mb-3 text-lg font-medium'>Add Slot</p>
+            <p className='mb-3 text-lg font-medium'>Thêm ca</p>
             <div className='bg-white px-8 py-8 border rounded w-full max-w-4xl max-h-[80vh] overflow-y-scroll'>
                 <div className='flex flex-col lg:flex-row items-start gap-10 text-gray-600'>
                     <div className='w-full lg:flex-1 flex flex-col gap-4'>
                         <div className='flex-1 flex flex-col gap-1'>
-                            <p>Slot Date</p>
+                            <p>Ngày</p>
                             <input
                                 onChange={e => setSlotDate(e.target.value)}
                                 value={slotDate}
@@ -67,14 +67,14 @@ const AddSlot = () => {
                             />
                         </div>
                         <div className='flex-1 flex flex-col gap-1'>
-                            <p>Doctor</p>
+                            <p>Bác sĩ</p>
                             <select
                                 onChange={e => setDoctorId(e.target.value)}
                                 value={doctorId}
                                 className='border rounded px-2 py-2'
                                 required
                             >
-                                <option value="" disabled>Select Doctor</option>
+                                <option value="" disabled>Chọn bác sĩ</option>
                                 {doctors.map(doctor => (
                                     <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
                                 ))}
@@ -84,7 +84,7 @@ const AddSlot = () => {
 
                     <div className='w-full lg:flex-1 flex flex-col gap-4'>
                         <div className='flex-1 flex flex-col gap-1'>
-                            <p>Slot Time</p>
+                            <p>Giờ</p>
                             <input
                                 onChange={e => setSlotTime(e.target.value)}
                                 value={slotTime}
@@ -96,7 +96,7 @@ const AddSlot = () => {
                     </div>
                 </div>
 
-                <button type='submit' className='bg-primary px-10 py-3 mt-4 text-white rounded-full'>Add Slot</button>
+                <button type='submit' className='bg-primary px-10 py-3 mt-4 text-white rounded-full'>Thêm</button>
             </div>
         </form>
     )

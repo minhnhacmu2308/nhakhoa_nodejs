@@ -3,6 +3,9 @@ import admin_logo from './logonha.png'
 import appointment_icon from './appointment_icon.svg'
 import cancel_icon from './cancel_icon.svg'
 import doctor_icon from './doctor_icon.svg'
+import service_icon from './service_icon.png'
+import dashboard_icon from './dashboard_icon.png'
+import news_icon from './news_icon.png'
 import home_icon from './home_icon.svg'
 import people_icon from './people_icon.svg'
 import upload_area from './upload_area.svg'
@@ -18,6 +21,9 @@ export const assets = {
     admin_logo,
     appointment_icon,
     cancel_icon,
+    dashboard_icon,
+    news_icon,
+    service_icon,
     doctor_icon,
     upload_area,
     home_icon,
