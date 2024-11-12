@@ -8,6 +8,9 @@ import { v2 as cloudinary } from 'cloudinary'
 import stripe from "stripe";
 import razorpay from 'razorpay';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import axios from 'axios';
+import https from 'https';
 
 
 // Gateway Initialize
@@ -432,7 +435,8 @@ const listAppointment = async (req, res) => {
                 a.amount,
                 a.cancelled,
                 a.payment,
-                a.isCompleted
+                a.isCompleted,
+                a.isReview
             FROM 
                 appointments a
             JOIN 
@@ -706,6 +710,145 @@ const generatePassword = () => {
     return password;
 };
 
+// Hàm tạo đơn thanh toán MoMo
+const createMoMoPayment = async (req, res) => {
+    const { appointmentId } = req.body;
+    // Lấy thông tin cuộc hẹn
+    const [appointments] = await req.app.locals.db.execute(
+        "SELECT * FROM appointments WHERE id = ?",
+        [appointmentId]
+    );
+
+    function removeDecimalPart(numberString) {
+        return numberString.includes(".") ? numberString.split(".")[0] : numberString;
+    }
+
+
+    //https://developers.momo.vn/#/docs/en/aiov2/?id=payment-method
+    //parameters
+    var accessKey = 'F8BBA842ECF85';
+    var secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+    var orderInfo = 'Thanh toán chi phí tại nha khoa';
+    var partnerCode = 'MOMO';
+    var redirectUrl = 'http://localhost:5173/my-appointments';
+    var ipnUrl = 'http://localhost:5173/my-appointments';
+    var requestType = "payWithMethod";
+    var amount = removeDecimalPart(appointments[0].amount.toString());
+    var orderId = partnerCode + new Date().getTime();
+    var requestId = appointmentId;
+    var extraData = '';
+    var paymentCode = 'T8Qii53fAXyUftPV3m9ysyRhEanUs9KlOPfHgpMR0ON50U10Bh+vZdpJU7VY4z+Z2y77fJHkoDc69scwwzLuW5MzeUKTwPo3ZMaB29imm6YulqnWfTkgzqRaion+EuD7FN9wZ4aXE1+mRt0gHsU193y+yxtRgpmY7SDMU9hCKoQtYyHsfFR5FUAOAKMdw2fzQqpToei3rnaYvZuYaxolprm9+/+WIETnPUDlxCYOiw7vPeaaYQQH0BF0TxyU3zu36ODx980rJvPAgtJzH1gUrlxcSS1HQeQ9ZaVM1eOK/jl8KJm6ijOwErHGbgf/hVymUQG65rHU2MWz9U8QUjvDWA==';
+    var orderGroupId = '';
+    var autoCapture = true;
+    var lang = 'vi';
+
+    //before sign HMAC SHA256 with format
+    //accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
+    var rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
+    //puts raw signature
+    console.log("--------------------RAW SIGNATURE----------------")
+    console.log(rawSignature)
+
+    var signature = crypto.createHmac('sha256', secretKey)
+        .update(rawSignature)
+        .digest('hex');
+    console.log("--------------------SIGNATURE----------------")
+    console.log(signature)
+
+    //json object send to MoMo endpoint
+    const requestBody = JSON.stringify({
+        partnerCode: partnerCode,
+        partnerName: "Test",
+        storeId: "MomoTestStore",
+        requestId: requestId,
+        amount: amount,
+        orderId: orderId,
+        orderInfo: orderInfo,
+        redirectUrl: redirectUrl,
+        ipnUrl: ipnUrl,
+        lang: lang,
+        requestType: requestType,
+        autoCapture: autoCapture,
+        extraData: extraData,
+        orderGroupId: orderGroupId,
+        signature: signature
+    });
+
+    try {
+        // //Create the HTTPS objects
+        const options = {
+            method: "POST",
+            url: "https://test-payment.momo.vn/v2/gateway/api/create",
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(requestBody)
+            },
+            data: requestBody
+        }
+
+        const response = await axios(options)
+        console.log(response)
+
+        if (response.data && response.data.payUrl) {
+            res.json({ payUrl: response.data.payUrl });
+        } else {
+            res.status(500).json({ message: 'Không thể tạo thanh toán MoMo.' });
+        }
+    } catch (error) {
+        console.error('Lỗi khi tạo thanh toán MoMo:', error);
+        res.status(500).json({ message: 'Lỗi khi tạo thanh toán MoMo.' });
+    }
+};
+
+const inputUrl = async (req, res) => {
+    // Xử lý dữ liệu nhận được từ MoMo
+    const { appointmentId } = req.body;
+    await req.app.locals.db.execute('UPDATE appointments SET payment = 1 WHERE id = ?', [appointmentId]);
+    res.sendStatus(200);
+}
+
+const ratingAppointment = async (req, res) => {
+    // Xử lý dữ liệu nhận được từ MoMo
+    try {
+        const { serviceId, appointmentId, rating, comment } = req.body;
+
+        if (!appointmentId || !rating || !comment || !serviceId) {
+            return res.json({ success: false, message: "Missing Infor" });
+        }
+
+        // Xác thực token từ request headers
+        const token = req.headers.token;
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Giải mã token để lấy thông tin người dùng
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        // Kiểm tra xem người dùng có tồn tại trong cơ sở dữ liệu
+        const [user] = await req.app.locals.db.execute(
+            'SELECT * FROM users WHERE id = ?',
+            [userId]
+        );
+
+        const now = new Date(Date.now());
+        const dateNow = now.toISOString().slice(0, 19).replace('T', ' ');
+
+        await req.app.locals.db.execute(
+            'INSERT INTO feedbacks (userId, serviceId, rate, comment, date) VALUES (?, ?, ?,?, ?)',
+            [userId, serviceId, rating, comment, dateNow]
+        );
+
+        await req.app.locals.db.execute('UPDATE appointments SET isReview = 1 WHERE id = ?', [appointmentId]);
+
+        res.json({ success: true, message: 'Đánh gía thành công' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
 export {
     loginUser,
     registerUser,
@@ -721,5 +864,8 @@ export {
     paymentStripe,
     verifyStripe,
     allSlotUser,
-    changePassword
+    changePassword,
+    createMoMoPayment,
+    inputUrl,
+    ratingAppointment,
 }

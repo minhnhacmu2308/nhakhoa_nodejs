@@ -1,5 +1,5 @@
 import express from 'express';
-import { serviceList, serviceDetail } from '../controllers/serviceController.js';
+import { listFeedbackByServiceId, serviceList, serviceDetail } from '../controllers/serviceController.js';
 const serviceRouter = express.Router();
 
 serviceRouter.get('/createTable-service', async (req, res) => {
@@ -50,7 +50,8 @@ serviceRouter.get('/createTable-feedbacks', async (req, res) => {
       userId INT NOT NULL,
       serviceId INT NOT NULL,
       rate int not null,
-      comment TEXT NOT NULL
+      comment TEXT NOT NULL,
+      date DATETIME NOT NULL
     )
   `;
 
@@ -66,5 +67,6 @@ serviceRouter.get('/createTable-feedbacks', async (req, res) => {
 
 serviceRouter.get("/list", serviceList)
 serviceRouter.get("/detail", serviceDetail)
+serviceRouter.get("/feedbacks", listFeedbackByServiceId)
 
 export default serviceRouter;

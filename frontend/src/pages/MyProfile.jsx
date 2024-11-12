@@ -52,7 +52,7 @@ const MyProfile = () => {
     // Function to update user password using API
     const updatePasswordHandler = async () => {
         if (newPassword !== confirmNewPassword) {
-            toast.error('New passwords do not match');
+            toast.error('Hai mật khẩu không trùnh khớp');
             return;
         }
 

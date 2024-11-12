@@ -42,12 +42,12 @@ const Appointment = () => {
 
     const bookAppointment = async () => {
         if (!token) {
-            toast.warning('Login to book appointment');
+            toast.warning('Đăng nhập để đặt lịch');
             return navigate('/login');
         }
 
         if (!docId || !slotDate || !slotTime || !serviceId) {
-            toast.warning('Please select all required options before booking an appointment');
+            toast.warning('Cần nhập đầy đủ thông tin');
             return;
         }
 

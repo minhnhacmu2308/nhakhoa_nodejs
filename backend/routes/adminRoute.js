@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   loginAdmin, appointmentsAdmin, appointmentCancel, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete,addNew
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -20,7 +20,8 @@ adminRouter.get('/createTable', async (req, res) => {
       date DATETIME NOT NULL,
       cancelled BOOLEAN DEFAULT false,
       payment BOOLEAN DEFAULT false,
-      isCompleted BOOLEAN DEFAULT false
+      isCompleted BOOLEAN DEFAULT false,
+      isReview BOOLEAN DEFAULT false
     )
   `;
 

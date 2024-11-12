@@ -29,8 +29,42 @@ const serviceDetail = async (req, res) => {
     }
 };
 
+const listFeedbackByServiceId = async (req, res) => {
+    try {
+
+        const { serviceId } = req.query;
+
+        // Câu truy vấn để lấy thông tin chi tiết về các cuộc hẹn
+        const [feedbacks] = await req.app.locals.db.execute(
+            `SELECT 
+                f.id, 
+                f.userId, 
+                u.name, 
+                u.email, 
+                u.image,
+                f.serviceId, 
+                f.rate, 
+                f.comment,
+                f.date
+            FROM 
+                feedbacks f
+            JOIN 
+                users u ON f.userId = u.id
+            WHERE 
+                f.serviceId = ?`,
+            [serviceId]
+        );
+
+        res.json({ success: true, feedbacks });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 
 export {
     serviceList,
     serviceDetail,
+    listFeedbackByServiceId
 }

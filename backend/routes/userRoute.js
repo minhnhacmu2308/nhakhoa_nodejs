@@ -1,5 +1,5 @@
 import express from 'express';
-import { changePassword, forgotPassword, loginUser, registerUser, getProfile, updateProfile, bookAppointment, listAppointment, editAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, allSlotUser } from '../controllers/userController.js';
+import { ratingAppointment, createMoMoPayment, inputUrl, changePassword, forgotPassword, loginUser, registerUser, getProfile, updateProfile, bookAppointment, listAppointment, editAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, allSlotUser } from '../controllers/userController.js';
 import upload from '../middleware/multer.js';
 import authUser from '../middleware/authUser.js';
 const userRouter = express.Router();
@@ -43,6 +43,9 @@ userRouter.post("/payment-razorpay", authUser, paymentRazorpay)
 userRouter.post("/verifyRazorpay", authUser, verifyRazorpay)
 userRouter.post("/payment-stripe", authUser, paymentStripe)
 userRouter.post("/verifyStripe", authUser, verifyStripe)
+userRouter.post("/momo/create-payment", authUser, createMoMoPayment)
+userRouter.post("/momo/ipn", authUser, inputUrl)
+userRouter.post("/rating", authUser, ratingAppointment)
 userRouter.get("/all-slot-user", allSlotUser)
 
 export default userRouter;
