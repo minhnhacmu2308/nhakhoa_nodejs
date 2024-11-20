@@ -53,23 +53,23 @@ const AdminContextProvider = (props) => {
 
     }
 
-        // Getting all Doctors data from Database using API
-        const getAllUser = async () => {
+    // Getting all Doctors data from Database using API
+    const getAllUser = async () => {
 
-            try {
-    
-                const { data } = await axios.get(backendUrl + '/api/user/list', { headers: { aToken } })
-                if (data.success) {
-                    setUsers(data.users)
-                } else {
-                    toast.error(data.message)
-                }
-    
-            } catch (error) {
-                toast.error(error.message)
+        try {
+
+            const { data } = await axios.get(backendUrl + '/api/user/list', { headers: { aToken } })
+            if (data.success) {
+                setUsers(data.users)
+            } else {
+                toast.error(data.message)
             }
-    
+
+        } catch (error) {
+            toast.error(error.message)
         }
+
+    }
 
     // Function to change doctor availablity using API
     const changeAvailability = async (docId) => {
@@ -116,6 +116,27 @@ const AdminContextProvider = (props) => {
         try {
 
             const { data } = await axios.post(backendUrl + '/api/admin/cancel-appointment', { appointmentId }, { headers: { aToken } })
+
+            if (data.success) {
+                toast.success(data.message)
+                getAllAppointments()
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            toast.error(error.message)
+            console.log(error)
+        }
+
+    }
+
+    // Function to cancel appointment using API
+    const confirmAppointment = async (appointmentId) => {
+
+        try {
+
+            const { data } = await axios.post(backendUrl + '/api/admin/confirm-appointment', { appointmentId }, { headers: { aToken } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -185,7 +206,8 @@ const AdminContextProvider = (props) => {
         getDashData,
         cancelAppointment,
         completeAppointment,
-        dashData
+        dashData,
+        confirmAppointment
     }
 
     return (

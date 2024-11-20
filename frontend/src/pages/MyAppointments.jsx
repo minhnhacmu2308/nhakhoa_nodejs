@@ -327,7 +327,7 @@ const MyAppointments = () => {
                                 )}
 
                                 {item.cancelled === 1 && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Lịch hẹn đã hủy</button>}
-                                {item.payment === 1 || item.cancelled === 1 || item.isCompleted === 1 ? null :
+                                {item.isConfirm ? null : item.payment === 1 || item.cancelled === 1 || item.isCompleted === 1 ? null :
                                     new Date(item.slot_date) >= new Date() ?
                                         <button
                                             onClick={() => item.isEdit ? handleCancelEditToggle(index) : handleEditToggle(index)}
@@ -348,7 +348,7 @@ const MyAppointments = () => {
                                 )}
 
                                 {/* Thêm nút thanh toán MoMo */}
-                                {item.payment === 0 && item.isCompleted !== 1 && item.cancelled !== 1 && new Date(item.slot_date) >= new Date() && (
+                                {item.payment === 0 && item.isCompleted !== 1 && item.cancelled !== 1 && item.isConfirm === 1 && new Date(item.slot_date) >= new Date() && (
                                     <button
                                         onClick={() => initiatePayment(item.appointment_id)} // gọi hàm thanh toán MoMo
                                         className='bg-white text-[#800080] border  sm:min-w-48 py-2 rounded hover:bg-[#800080] hover:text-white transition-all duration-300'
@@ -356,7 +356,7 @@ const MyAppointments = () => {
                                         Thanh toán MoMo
                                     </button>
                                 )}
-
+                                {item.isConfirm === 0 && <button className='sm:min-w-48 py-2 border border-yellow-500 rounded text-yellow-500'>Đang chờ xác nhận</button>}
                                 {item.payment === 1 && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Đã thanh toán</button>}
                                 {item.isCompleted === 1 && item.isReview === 0 && (
                                     <button

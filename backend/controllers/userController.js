@@ -497,7 +497,8 @@ const listAppointment = async (req, res) => {
                 a.cancelled,
                 a.payment,
                 a.isCompleted,
-                a.isReview
+                a.isReview,
+                a.isConfirm
             FROM 
                 appointments a
             JOIN 

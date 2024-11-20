@@ -5,8 +5,8 @@ import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
 
 const AllAppointments = () => {
-  const { aToken, appointments, cancelAppointment, getAllAppointments, completeAppointment } = useContext(AdminContext);
-  const {calculateAge, currency } = useContext(AppContext);
+  const { aToken, appointments, cancelAppointment, getAllAppointments, completeAppointment, confirmAppointment } = useContext(AdminContext);
+  const { calculateAge, currency } = useContext(AppContext);
 
   useEffect(() => {
     if (aToken) {
@@ -18,7 +18,7 @@ const AllAppointments = () => {
     const date = new Date(dateSlot)
     const formattedDate = `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}`
     return formattedDate
-}
+  }
 
   return (
     <div className='w-full max-w-6xl m-5'>
@@ -67,7 +67,7 @@ const AllAppointments = () => {
                     {item.payment === 0 ? 'Chưa thanh toán' : 'Đã thanh toán'}
                   </td> */}
                   <td className="px-6 py-3 border-b text-left">
-                    {item.isCompleted === 0 ? 'Chưa hoàn thành' : 'Đã hoàn thành'}
+                    {item.isConfirm === 0 ? 'Chưa xác nhận' : item.isCompleted === 0 ? 'Chưa hoàn thành' : 'Đã hoàn thành'}
                   </td>
                   <td className="px-6 py-3 border-b text-center">
                     {item.cancelled ? (
@@ -82,12 +82,19 @@ const AllAppointments = () => {
                           src={assets.cancel_icon}
                           alt="Cancel"
                         />
-                        <img
+                        {item.isConfirm === 0 ? <img
+                          onClick={() => confirmAppointment(item.id)}
+                          className="w-6 h-6 cursor-pointer mx-1"
+                          src={assets.complete_icon} // Thay đổi thành icon hoàn thành của bạn
+                          alt="confirm"
+                        /> : <img
                           onClick={() => completeAppointment(item.id)}
                           className="w-6 h-6 cursor-pointer mx-1"
                           src={assets.complete_icon} // Thay đổi thành icon hoàn thành của bạn
                           alt="Complete"
-                        />
+                        />}
+
+
                       </div>
                     )}
                   </td>

@@ -1,7 +1,7 @@
 import express from 'express';
 import {
-  loginAdmin, appointmentsAdmin, appointmentCancel, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew
+  loginAdmin, appointmentsAdmin, appointmentCancel, appointmentConfirm, addDoctor, allDoctors, adminDashboard
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew, addSlotsFromExcel, uploadA
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -21,7 +21,8 @@ adminRouter.get('/createTable', async (req, res) => {
       cancelled BOOLEAN DEFAULT false,
       payment BOOLEAN DEFAULT false,
       isCompleted BOOLEAN DEFAULT false,
-      isReview BOOLEAN DEFAULT false
+      isReview BOOLEAN DEFAULT false,
+      isConfirm BOOLEAN DEFAULT false
     )
   `;
 
@@ -36,10 +37,12 @@ adminRouter.get('/createTable', async (req, res) => {
 
 adminRouter.post("/login", loginAdmin)
 adminRouter.post("/add-doctor", authAdmin, upload.single('image'), addDoctor)
+adminRouter.post("/add-slot-excel", authAdmin, uploadA.single('file'), addSlotsFromExcel)
 adminRouter.post("/add-service", authAdmin, upload.single('image'), addService)
 adminRouter.post("/add-news", authAdmin, upload.single('image'), addNew)
 adminRouter.get("/appointments", appointmentsAdmin)
 adminRouter.post("/cancel-appointment", authAdmin, appointmentCancel)
+adminRouter.post("/confirm-appointment", authAdmin, appointmentConfirm)
 adminRouter.post("/complete-appointment", authAdmin, appointmentComplete)
 adminRouter.get("/all-doctors", authAdmin, allDoctors)
 adminRouter.post("/change-availability", authAdmin, changeAvailablity)

@@ -6,6 +6,104 @@ import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
 import nodemailer from 'nodemailer';
+import multer from 'multer';
+import XLSX from 'xlsx';
+import path from 'path';
+import fs from "fs";
+
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "./uploads"); // Lưu file vào thư mục uploads
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Đặt tên file theo timestamp
+    },
+});
+
+// Middleware upload
+const uploadA = multer({ storage });
+
+const addSlotsFromExcel = async (req, res) => {
+    try {
+        // Kiểm tra tệp đã được tải lên chưa
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Không có tập tin nào được tải lên' });
+        }
+
+        const filePath = path.join("./uploads", req.file.filename);
+        console.log(filePath);
+
+
+        // Đọc tệp Excel
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0]; // Lấy sheet đầu tiên
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        console.log(data);
+
+        if (data.length === 0) {
+            return res.status(400).json({ success: false, message: 'Không có dữ liệu nào được tìm thấy trong tập tin' });
+        }
+
+        // Lọc và kiểm tra dữ liệu trong tệp
+        const slots = [];
+        data.forEach(item => {
+            const { doctor_id, slot_date, slot_time } = item;
+
+            // Kiểm tra các trường bắt buộc
+            if (!doctor_id || !slot_date || !slot_time) {
+                return; // Bỏ qua nếu thiếu thông tin
+            }
+
+            // Kiểm tra định dạng ngày và giờ
+            const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slot_date); // YYYY-MM-DD
+            const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slot_time); // HH:MM or HH:MM:SS
+
+            if (validDate && validTime) {
+                slots.push({ doctor_id, slot_date, slot_time });
+            }
+        });
+
+        if (slots.length === 0) {
+            return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ trong tệp' });
+        }
+
+        // Thêm các slot vào cơ sở dữ liệu
+        for (const slot of slots) {
+            const { doctor_id, slot_date, slot_time } = slot;
+
+            // Kiểm tra xem slot đã tồn tại chưa
+            const [existingSlot] = await req.app.locals.db.execute(
+                'SELECT * FROM slots WHERE doctor_id = ? AND slot_date = ? AND slot_time = ?',
+                [doctor_id, slot_date, slot_time]
+            );
+
+            if (existingSlot.length > 0) {
+                return res.json({ success: false, message: `Đã có chỗ dành cho bác sĩ ${doctor_id} vào ${slot_date} lúc ${slot_time}` });
+            }
+
+            // Thêm slot vào cơ sở dữ liệu
+            await req.app.locals.db.execute(
+                'INSERT INTO slots (doctor_id, slot_date, slot_time) VALUES (?, ?, ?)',
+                [doctor_id, slot_date, slot_time]
+            );
+        }
+        // Xóa file sau khi xử lý
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            } else {
+                console.log("File deleted successfully");
+            }
+        });
+        res.json({ success: true, message: 'Slots đã được thêm thành công' });
+
+    } catch (error) {
+        console.log("oko", error);
+        res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi xử lý tệp' });
+    }
+};
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -15,10 +113,10 @@ const loginAdmin = async (req, res) => {
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
             const token = jwt.sign(email + password, process.env.JWT_SECRET);
             res.json({ success: true, token });
-        } else  if (email === process.env.EMP_EMAIL && password === process.env.EMP_PASSWORD) { 
-                const token = jwt.sign(email + password, process.env.JWT_SECRET);
-                res.json({ success: true, token });
-        } 
+        } else if (email === process.env.EMP_EMAIL && password === process.env.EMP_PASSWORD) {
+            const token = jwt.sign(email + password, process.env.JWT_SECRET);
+            res.json({ success: true, token });
+        }
         else {
             res.json({ success: false, message: "Invalid credentials" });
         }
@@ -109,6 +207,78 @@ const appointmentCancel = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+const appointmentConfirm = async (req, res) => {
+    try {
+        const { appointmentId } = req.body;
+
+        // Lấy thông tin cuộc hẹn
+        const [appointments] = await req.app.locals.db.execute(
+            'SELECT * FROM appointments WHERE id = ?',
+            [appointmentId]
+        );
+
+        if (appointments.length === 0) {
+            return res.json({ success: false, message: 'Appointment not found' });
+        }
+
+        const { userId, doctor_id, date, slotId } = appointments[0];
+
+        // Kiểm tra trạng thái cuộc hẹn xem đã xác nhận hay chưa
+        if (appointments[0].confirmed === 1) {
+            return res.json({ success: false, message: 'Appointment has already been confirmed' });
+        }
+
+        // Cập nhật trạng thái xác nhận cuộc hẹn
+        await req.app.locals.db.execute('UPDATE appointments SET isConfirm = 1 WHERE id = ?', [appointmentId]);
+        await req.app.locals.db.execute('UPDATE slots SET is_booked = 1 WHERE id = ?', [slotId]);
+
+        // Lấy thông tin người dùng, bác sĩ và slot
+        const [users] = await req.app.locals.db.execute('SELECT * FROM users WHERE id = ?', [userId]);
+        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots WHERE id = ?', [slotId]);
+        const [doctors] = await req.app.locals.db.execute("SELECT * FROM doctors WHERE id = ?", [slots[0].doctor_id]);
+
+        // Thiết lập và gửi email thông báo xác nhận
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
+            to: users[0].email,
+            subject: 'Lịch hẹn xác nhận thành công',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                    <h2 style="color: #333;">Xin chào ${users[0].name},</h2>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Chúng tôi vui mừng thông báo rằng cuộc hẹn của bạn với Bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</strong> đã được xác nhận.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Bạn vui lòng đến đúng giờ và địa điểm để cuộc hẹn được diễn ra thuận lợi.
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                        Nếu bạn không thể tham gia cuộc hẹn, xin vui lòng thông báo lại với chúng tôi càng sớm càng tốt để chúng tôi có thể điều chỉnh lịch trình.
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.5; color: #777;">
+                        Để được hỗ trợ thêm, vui lòng liên hệ với chúng tôi qua email này hoặc số điện thoại hỗ trợ của chúng tôi.
+                    </p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: 'Appointment confirmed successfully' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 
 
 // API for marking an appointment as completed
@@ -232,7 +402,7 @@ const addDoctor = async (req, res) => {
 // API for adding Service
 const addService = async (req, res) => {
     try {
-        const { title, sortdes,fees,describe } = req.body;
+        const { title, sortdes, fees, describe } = req.body;
         const imageFile = req.file;
 
         if (!title || !fees || !sortdes) {
@@ -258,7 +428,7 @@ const addService = async (req, res) => {
 // API for adding New
 const addNew = async (req, res) => {
     try {
-        const { title, sortdes,describe } = req.body;
+        const { title, sortdes, describe } = req.body;
         const imageFile = req.file;
 
         if (!title || !describe || !sortdes) {
@@ -446,6 +616,7 @@ export {
     loginAdmin,
     appointmentsAdmin,
     appointmentCancel,
+    appointmentConfirm,
     appointmentComplete,
     addDoctor,
     allDoctors,
@@ -456,5 +627,7 @@ export {
     allSlot,
     getSlotById,
     addService,
-    addNew
+    addNew,
+    addSlotsFromExcel,
+    uploadA
 }
