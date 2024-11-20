@@ -23,6 +23,24 @@ const storage = multer.diskStorage({
 
 // Middleware upload
 const uploadA = multer({ storage });
+const downloadFileExcel = async (req, res) => {
+    const filePath = path.join("./uploads", '1732106430717-nhakhoa1.xlsx'); // Đường dẫn tới file cần tải
+
+    // Kiểm tra xem tệp có tồn tại không
+    fs.exists(filePath, (exists) => {
+        if (!exists) {
+            return res.status(404).send('File not found');
+        }
+
+        // Đặt header để tải xuống file với tên tệp gốc
+        res.setHeader('Content-Disposition', 'attachment; filename="datammm.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // Đọc và gửi tệp Excel dưới dạng stream
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res); // Sử dụng stream để gửi tệp về client
+    });
+}
 
 const addSlotsFromExcel = async (req, res) => {
     try {
@@ -629,5 +647,6 @@ export {
     addService,
     addNew,
     addSlotsFromExcel,
-    uploadA
+    uploadA,
+    downloadFileExcel
 }
