@@ -56,7 +56,7 @@ const appointmentCancel = async (req, res) => {
         );
 
         if (appointments.length === 0) {
-            return res.json({ success: false, message: 'Appointment not found' });
+            return res.json({ success: false, message: 'Cuộc hẹn không được tìm thấy' });
         }
 
         const { userId, doctor_id, date } = appointments[0];
@@ -125,7 +125,7 @@ const appointmentComplete = async (req, res) => {
         );
 
         if (appointments.length === 0) {
-            return res.json({ success: false, message: 'Appointment not found' });
+            return res.json({ success: false, message: 'Cuộc hẹn không được tìm thấy' });
         }
 
         const { userId, doctor_id, date } = appointments[0];
@@ -200,7 +200,7 @@ const changeAvailablity = async (req, res) => {
         const newAvailability = !docData[0].available;
         await req.app.locals.db.execute('UPDATE doctors SET available = ? WHERE id = ?', [newAvailability, docId]);
 
-        res.json({ success: true, message: 'Availability Changed' });
+        res.json({ success: true, message: 'Tính khả dụng đã thay đổi' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -229,7 +229,7 @@ const updateDoctorProfile = async (req, res) => {
 
         await req.app.locals.db.execute('UPDATE doctors SET fees = ?, address = ?, available = ? WHERE id = ?', [fees, address, available, docId]);
 
-        res.json({ success: true, message: 'Profile Updated' });
+        res.json({ success: true, message: 'Cập nhật thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });

@@ -26,15 +26,15 @@ const registerUser = async (req, res) => {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.json({ success: false, message: 'Missing Details' });
+            return res.json({ success: false, message: 'Cần điền đầy đủ thông tin' });
         }
 
         if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: "Please enter a valid email" });
+            return res.json({ success: false, message: "Vui lòng nhập đúng định dạng email" });
         }
 
         if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" });
+            return res.json({ success: false, message: "Vui lòng nhập mật khẩu hơn 8 ký tự" });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -140,7 +140,7 @@ const loginUser = async (req, res) => {
         );
 
         if (users.length === 0) {
-            return res.json({ success: false, message: "User does not exist" });
+            return res.json({ success: false, message: "Người dùng không tồn tại" });
         }
 
         const user = users[0];
@@ -151,7 +151,7 @@ const loginUser = async (req, res) => {
             const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
             res.json({ success: true, token });
         } else {
-            res.json({ success: false, message: "Invalid credentials" });
+            res.json({ success: false, message: "Thông tin xác thực không hợp lệ" });
         }
     } catch (error) {
         console.log(error);
@@ -171,7 +171,7 @@ const getProfile = async (req, res) => {
         );
 
         if (users.length === 0) {
-            return res.json({ success: false, message: "User not found" });
+            return res.json({ success: false, message: "Người dùng không được tìm thấy" });
         }
 
         res.json({ success: true, userData: users[0] });
@@ -181,6 +181,50 @@ const getProfile = async (req, res) => {
     }
 };
 
+// API to get feedback data by doctor ID
+// API to get feedback data by doctor ID with service name
+const getFeedbacksByDoctor = async (req, res) => {
+    try {
+        const { doctorId } = req.query;
+
+        // Truy vấn lấy thông tin feedback, người dùng và tên dịch vụ
+        const [feedbacks] = await req.app.locals.db.execute(
+            `SELECT 
+                f.id, 
+                f.userId, 
+                u.name AS userName, 
+                u.email, 
+                u.image,
+                f.serviceId, 
+                s.title AS serviceName,  -- Lấy tên dịch vụ
+                f.rate, 
+                f.comment,
+                f.date
+             FROM feedbacks f
+             JOIN users u ON f.userId = u.id
+             JOIN services s ON f.serviceId = s.id  -- Kết nối với bảng services
+             WHERE f.serviceId IN (
+                SELECT service_id
+                FROM doc_ser
+                WHERE doctor_id = ?
+             )`,
+            [doctorId]
+        );
+
+        if (feedbacks.length === 0) {
+            return res.json({ success: false, message: "Không tìm thấy feedback cho bác sĩ này" });
+        }
+
+        res.json({ success: true, feedbackData: feedbacks });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+
+
 // API to update user profile
 const updateProfile = async (req, res) => {
     try {
@@ -188,7 +232,7 @@ const updateProfile = async (req, res) => {
         const imageFile = req.file;
 
         if (!name || !phone || !dob || !gender) {
-            return res.json({ success: false, message: "Data Missing" });
+            return res.json({ success: false, message: "Cần điền đầy đủ thông tin" });
         }
 
         await req.app.locals.db.execute(
@@ -206,7 +250,7 @@ const updateProfile = async (req, res) => {
             );
         }
 
-        res.json({ success: true, message: 'Profile Updated' });
+        res.json({ success: true, message: 'Cập nhập thông tin thành công' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -234,7 +278,7 @@ const bookAppointment = async (req, res) => {
         );
 
         if (doctors.length === 0) {
-            return res.json({ success: false, message: 'Doctor Not Available' });
+            return res.json({ success: false, message: 'Bác sĩ không có săn' });
         }
 
         // Kiểm tra slot
@@ -271,41 +315,40 @@ const bookAppointment = async (req, res) => {
                 pass: process.env.EMAIL_PASS  // Mật khẩu hoặc token ứng dụng của bạn
             }
         });
-
         const mailOptions = {
-            from: '"Nha Khoa Care" <nhakhoa@gmail.com>', // Your email address
-            to: users[0].email, // User's email address
-            subject: 'Appointment Booked Successfully',
+            from: '"Nha Khoa Care" <nhakhoa@gmail.com>', // Địa chỉ email của bạn
+            to: users[0].email, // Địa chỉ email của người dùng
+            subject: 'Đặt lịch hẹn thành công',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <h2 style="color: #333;">Xin chào ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        You have successfully booked an appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${formattedDate}</strong> at <strong>${slotTime}</strong>.
+                        Bạn đã đặt lịch hẹn thành công với bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${formattedDate}</strong> lúc <strong>${slotTime}</strong>.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Please make sure to arrive on time for your appointment.
+                        Vui lòng đến đúng giờ để đảm bảo cuộc hẹn diễn ra thuận lợi.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Thank you!
+                        Cảm ơn bạn đã tin tưởng và lựa chọn Nha Khoa Care!
                     </p>
                     <p style="font-size: 14px; line-height: 1.5; color: #777;">
-                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                        Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi qua email này hoặc số điện thoại hỗ trợ.
                     </p>
                 </div>
             `,
         };
 
 
+
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment Booked and Email Sent' });
+        res.json({ success: true, message: 'Đã đặt lịch hẹn và đã gửi email' });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
 };
 
 
-// API to edit appointment
 const editAppointment = async (req, res) => {
     try {
         const { appointmentId, slotDate, slotTime, serviceId, doctorId } = req.body;
@@ -320,7 +363,7 @@ const editAppointment = async (req, res) => {
         );
 
         if (doctors.length === 0) {
-            return res.json({ success: false, message: 'Doctor Not Available' });
+            return res.json({ success: false, message: 'Bác sĩ hiện không có sẵn' });
         }
 
         // Kiểm tra cuộc hẹn có tồn tại không
@@ -336,20 +379,18 @@ const editAppointment = async (req, res) => {
         );
 
         if (slot[0].id === appointment[0].slotId && appointment[0].serviceId === serviceId) {
-            return res.json({ success: false, message: 'No changes' });
+            return res.json({ success: false, message: 'Không có thay đổi nào' });
         }
 
         if (appointment.length === 0) {
-            return res.json({ success: false, message: 'Appointment not found' });
+            return res.json({ success: false, message: 'Không tìm thấy cuộc hẹn' });
         }
-
 
         // Kiểm tra thông tin người dùng và bác sĩ
         const [users] = await req.app.locals.db.execute("SELECT * FROM users WHERE id = ?", [appointment[0].userId]);
 
-
         if (slot.length === 0) {
-            return res.json({ success: false, message: 'Selected slot is not available' });
+            return res.json({ success: false, message: 'Khung giờ đã được đặt, vui lòng chọn thời gian khác' });
         }
 
         // Cập nhật thông tin cuộc hẹn
@@ -376,21 +417,21 @@ const editAppointment = async (req, res) => {
         const mailOptions = {
             from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
             to: users[0].email,
-            subject: 'Appointment Updated Successfully',
+            subject: 'Cập nhật lịch hẹn thành công',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <h2 style="color: #333;">Xin chào ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Your appointment with Dr. <strong>${doctors[0].name}</strong> has been successfully updated to <strong>${formattedDate}</strong> at <strong>${slotTime}</strong>.
+                        Lịch hẹn của bạn với bác sĩ <strong>${doctors[0].name}</strong> đã được cập nhật thành công vào ngày <strong>${formattedDate}</strong> lúc <strong>${slotTime}</strong>.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Please make sure to arrive on time for your appointment.
+                        Vui lòng đến đúng giờ để đảm bảo cuộc hẹn diễn ra thuận lợi.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Thank you!
+                        Cảm ơn bạn đã tin tưởng và lựa chọn Nha Khoa Care!
                     </p>
                     <p style="font-size: 14px; line-height: 1.5; color: #777;">
-                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                        Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi qua email này hoặc số điện thoại hỗ trợ.
                     </p>
                 </div>
             `,
@@ -398,14 +439,13 @@ const editAppointment = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment updated successfully and Email Sent' });
+        res.json({ success: true, message: 'Cập nhật lịch hẹn thành công và email đã được gửi' });
     } catch (error) {
-        res.json({ success: false, message: error.message });
+        res.json({ success: false, message: `Lỗi: ${error.message}` });
     }
 };
 
 
-// API to cancel appointment
 const cancelAppointment = async (req, res) => {
     try {
         const { userId, appointmentId } = req.body;
@@ -418,7 +458,7 @@ const cancelAppointment = async (req, res) => {
         );
 
         if (appointments.length === 0 || appointments[0].userId !== userId) {
-            return res.json({ success: false, message: 'Unauthorized action' });
+            return res.json({ success: false, message: 'Không được phép thực hiện hành động này' });
         }
 
         // Cập nhật trạng thái của cuộc hẹn và slot
@@ -443,21 +483,21 @@ const cancelAppointment = async (req, res) => {
         const mailOptions = {
             from: '"Nha Khoa Care" <nhakhoa@gmail.com>',
             to: users[0].email,
-            subject: 'Appointment Cancelled Successfully',
+            subject: 'Hủy lịch hẹn thành công',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <h2 style="color: #333;">Xin chào ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Your appointment with Dr. <strong>${doctors[0].name}</strong> on <strong>${appointments[0].date}</strong> has been successfully cancelled.
+                        Cuộc hẹn của bạn với bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${appointments[0].date}</strong> đã được hủy thành công.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        We're sorry to hear you won't be able to make it. If you'd like to reschedule, please visit our website or contact us directly.
+                        Chúng tôi rất tiếc khi biết rằng bạn không thể tham gia cuộc hẹn. Nếu bạn muốn đặt lại, vui lòng truy cập website của chúng tôi hoặc liên hệ trực tiếp.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                        Thank you for using our service.
+                        Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.
                     </p>
                     <p style="font-size: 14px; line-height: 1.5; color: #777;">
-                        If you have any questions, feel free to reach out to us via this email or our support phone number.
+                        Nếu có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email này hoặc số điện thoại hỗ trợ.
                     </p>
                 </div>
             `,
@@ -465,12 +505,13 @@ const cancelAppointment = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment Cancelled and Email Sent' });
+        res.json({ success: true, message: 'Đã hủy lịch hẹn và gửi email thông báo' });
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message });
+        res.json({ success: false, message: `Lỗi: ${error.message}` });
     }
 };
+
 
 
 // API to get user appointments for frontend my-appointments page
@@ -645,20 +686,21 @@ const allSlotUser = async (req, res) => {
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        console.log("email", email)
+        console.log("email", email);
+
         // Kiểm tra email đầu vào
         if (!email) {
-            return res.status(400).json({ success: false, message: "Email is required" });
+            return res.status(400).json({ success: false, message: "Vui lòng cung cấp email" });
         }
 
         // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu không
         const [user] = await req.app.locals.db.execute("SELECT * FROM users WHERE email = ?", [email]);
 
         if (user.length === 0) {
-            return res.status(404).json({ success: false, message: "User with this email does not exist" });
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng với email này" });
         }
 
-        // Mật khẩu mới là "123456789"
+        // Tạo mật khẩu mới, ví dụ: "123456789"
         const newPassword = generatePassword();
 
         // Mã hóa mật khẩu mới
@@ -684,63 +726,61 @@ const forgotPassword = async (req, res) => {
         const mailOptions = {
             from: "nhakhoa@gmail.com",
             to: email,
-            subject: 'Your New Password',
-            text: `Your password has been reset. Your new password is: ${newPassword}`
+            subject: 'Mật khẩu mới của bạn',
+            text: `Mật khẩu của bạn đã được đặt lại. Mật khẩu mới của bạn là: ${newPassword}`
         };
 
         // Gửi email chứa mật khẩu mới
         transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
-                console.error("Error sending email: ", err);
-                return res.status(500).json({ success: false, message: "Error sending email" });
+                console.error("Lỗi khi gửi email: ", err);
+                return res.status(500).json({ success: false, message: "Lỗi khi gửi email" });
             } else {
-                console.log("Email sent: " + info.response);
+                console.log("Email đã được gửi: " + info.response);
             }
         });
 
-        res.json({ success: true, message: "New password sent to your email" });
+        res.json({ success: true, message: "Mật khẩu mới đã được gửi tới email của bạn" });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: `Lỗi: ${error.message}` });
     }
 };
+
 
 const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
+
         // Xác thực token từ request headers
         const token = req.headers.token;
         if (!token) {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
+            return res.status(401).json({ success: false, message: 'Không được phép truy cập' });
         }
 
         // Giải mã token để lấy thông tin người dùng
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("decoded", decoded)
         const userId = decoded.id;
-        console.log("userId", userId)
 
         // Kiểm tra xem người dùng có tồn tại trong cơ sở dữ liệu
         const [user] = await req.app.locals.db.execute(
             'SELECT * FROM users WHERE id = ?',
             [userId]
         );
-        console.log("[user]", [user])
+
         if (!user.length) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
         }
-        console.log("user[0].password)", user[0].password)
-        console.log("req.body", req.body)
+
         // Kiểm tra mật khẩu cũ có khớp không
         const isMatch = await bcrypt.compare(oldPassword, user[0].password);
-        console.log("isMatch", isMatch)
         if (!isMatch) {
-            return res.json({ success: false, message: 'Incorrect old password' });
+            return res.json({ success: false, message: 'Mật khẩu cũ không đúng' });
         }
 
         // Kiểm tra độ dài mật khẩu mới
         if (newPassword.length < 8) {
-            return res.json({ success: false, message: 'New password must be at least 8 characters' });
+            return res.json({ success: false, message: 'Mật khẩu mới phải có ít nhất 8 ký tự' });
         }
 
         // Hash mật khẩu mới
@@ -753,12 +793,13 @@ const changePassword = async (req, res) => {
             [hashedPassword, userId]
         );
 
-        res.json({ success: true, message: 'Password changed successfully' });
+        res.json({ success: true, message: 'Thay đổi mật khẩu thành công' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ' });
     }
 };
+
 
 const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
@@ -943,4 +984,5 @@ export {
     createMoMoPayment,
     inputUrl,
     ratingAppointment,
+    getFeedbacksByDoctor
 }

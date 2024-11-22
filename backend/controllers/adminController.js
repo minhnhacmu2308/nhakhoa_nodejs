@@ -30,12 +30,12 @@ const downloadFileExcel = async (req, res) => {
 
     // Kiểm tra file có tồn tại không
     if (!fs.existsSync(filePath)) {
-        return res.status(404).send("File not found");
+        return res.status(404).send("Không tìm thấy file");
     }
 
     try {
-       // Đọc file Excel gốc, giữ lại cả dữ liệu và định dạng
-       const workbook = XLSX.readFile(filePath, { cellStyles: true }); // Thêm option cellStyles để giữ lại định dạng
+        // Đọc file Excel gốc, giữ lại cả dữ liệu và định dạng
+        const workbook = XLSX.readFile(filePath, { cellStyles: true }); // Thêm option cellStyles để giữ lại định dạng
 
         // Lấy danh sách bác sĩ từ database
         const [doctors] = await req.app.locals.db.execute(
@@ -70,10 +70,11 @@ const downloadFileExcel = async (req, res) => {
             fs.unlinkSync(tempFilePath);
         });
     } catch (error) {
-        console.error("Error while processing Excel file:", error);
-        res.status(500).send("Internal Server Error");
+        console.error("Lỗi khi xử lý file Excel:", error);
+        res.status(500).send("Lỗi máy chủ nội bộ");
     }
 };
+
 
 const addSlotsFromExcel = async (req, res) => {
     try {
@@ -84,7 +85,6 @@ const addSlotsFromExcel = async (req, res) => {
 
         const filePath = path.join("./uploads", req.file.filename);
         console.log(filePath);
-
 
         // Đọc tệp Excel
         const workbook = XLSX.readFile(filePath);
@@ -140,21 +140,24 @@ const addSlotsFromExcel = async (req, res) => {
                 [doctor_id, slot_date, slot_time]
             );
         }
+
         // Xóa file sau khi xử lý
         fs.unlink(filePath, (err) => {
             if (err) {
-                console.error("Error deleting file:", err);
+                console.error("Lỗi khi xóa file:", err);
             } else {
-                console.log("File deleted successfully");
+                console.log("File đã được xóa thành công");
             }
         });
-        res.json({ success: true, message: 'Slots đã được thêm thành công' });
+
+        res.json({ success: true, message: 'Các slot đã được thêm thành công' });
 
     } catch (error) {
-        console.log("oko", error);
+        console.log("Lỗi:", error);
         res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi xử lý tệp' });
     }
 };
+
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -283,14 +286,14 @@ const appointmentConfirm = async (req, res) => {
         );
 
         if (appointments.length === 0) {
-            return res.json({ success: false, message: 'Appointment not found' });
+            return res.json({ success: false, message: 'Không tìm thấy cuộc hẹn' });
         }
 
         const { userId, doctor_id, date, slotId } = appointments[0];
 
         // Kiểm tra trạng thái cuộc hẹn xem đã xác nhận hay chưa
         if (appointments[0].confirmed === 1) {
-            return res.json({ success: false, message: 'Appointment has already been confirmed' });
+            return res.json({ success: false, message: 'Cuộc hẹn đã được xác nhận' });
         }
 
         // Cập nhật trạng thái xác nhận cuộc hẹn
@@ -336,12 +339,13 @@ const appointmentConfirm = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Appointment confirmed successfully' });
+        res.json({ success: true, message: 'Cuộc hẹn đã được xác nhận thành công' });
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message });
+        res.json({ success: false, message: 'Đã xảy ra lỗi: ' + error.message });
     }
 };
+
 
 
 
@@ -357,11 +361,12 @@ const appointmentComplete = async (req, res) => {
         );
 
         if (appointments.length === 0) {
-            return res.json({ success: false, message: 'Appointment not found' });
+            return res.json({ success: false, message: 'Không tìm thấy cuộc hẹn' });
         }
 
         const { userId, doctor_id, date } = appointments[0];
         const { slotId } = appointments[0];
+
         // Cập nhật trạng thái của cuộc hẹn
         await req.app.locals.db.execute('UPDATE appointments SET isCompleted = 1 WHERE id = ?', [appointmentId]);
 
@@ -385,9 +390,9 @@ const appointmentComplete = async (req, res) => {
             subject: 'Hoàn thành lịch hẹn',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h2 style="color: #333;">Hi ${users[0].name},</h2>
+                    <h2 style="color: #333;">Chào ${users[0].name},</h2>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                       Chúng tôi vui mừng thông báo với bạn rằng cuộc hẹn của bạn với Bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</strong> đã diễn ra thành công
+                       Chúng tôi vui mừng thông báo với bạn rằng cuộc hẹn của bạn với Bác sĩ <strong>${doctors[0].name}</strong> vào ngày <strong>${date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</strong> đã diễn ra thành công.
                     </p>
                     <p style="font-size: 16px; line-height: 1.5; color: #555;">
                         Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi! Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.
@@ -401,35 +406,46 @@ const appointmentComplete = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: 'Thành công' });
+        res.json({ success: true, message: 'Cuộc hẹn đã được hoàn thành thành công' });
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message });
+        res.json({ success: false, message: 'Đã xảy ra lỗi: ' + error.message });
     }
 };
 
 
-// API for adding Doctor
+
 const addDoctor = async (req, res) => {
     try {
         const { name, email, password, speciality, degree, experience, about, address, services } = req.body;
         const imageFile = req.file;
 
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !address || !services) {
-            return res.json({ success: false, message: "Missing Details" });
+        // Kiểm tra tất cả các trường bắt buộc
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !address || !services || !imageFile) {
+            return res.json({ success: false, message: "Thiếu thông tin" });
         }
 
+        // Kiểm tra email hợp lệ
         if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: "Please enter a valid email" });
+            return res.json({ success: false, message: "Vui lòng nhập email hợp lệ" });
         }
 
+        // Kiểm tra độ dài mật khẩu
         if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" });
+            return res.json({ success: false, message: "Vui lòng nhập mật khẩu mạnh hơn (ít nhất 8 ký tự)" });
         }
 
+        // Kiểm tra loại file ảnh
+        const allowedFileTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedFileTypes.includes(imageFile.mimetype)) {
+            return res.json({ success: false, message: "Vui lòng tải lên tệp hình ảnh hợp lệ" });
+        }
+
+        // Mã hóa mật khẩu
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // Upload ảnh lên Cloudinary
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
         const imageUrl = imageUpload.secure_url;
 
@@ -452,11 +468,11 @@ const addDoctor = async (req, res) => {
         // Chờ tất cả các dịch vụ được thêm vào bảng doc_ser
         await Promise.all(serviceInsertPromises);
 
-        res.json({ success: true, message: 'Thành công' });
+        res.json({ success: true, message: 'Thêm bác sĩ thành công' });
 
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message });
+        res.json({ success: false, message: 'Đã xảy ra lỗi: ' + error.message });
     }
 };
 
@@ -552,74 +568,97 @@ const adminDashboard = async (req, res) => {
 // API to add a new slot
 const addSlot = async (req, res) => {
     try {
-        console.log(req.body);
-        const { doctorId, slotDate, slotTime } = req.body; // Cập nhật trường từ camelCase
+        const { doctorId, slotDate, slotTime } = req.body;
 
-        // Validate slot_date and slot_time
+        // Validate required fields
         if (!doctorId || !slotDate || !slotTime) {
-            return res.json({ success: false, message: "Missing required fields" });
+            return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
-        const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slotDate); // YYYY-MM-DD
-        const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slotTime); // HH:MM or HH:MM:SS
+        // Validate slotDate format (YYYY-MM-DD)
+        const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slotDate);
+        // Validate slotTime format (HH:MM or HH:MM:SS)
+        const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slotTime);
 
         if (!validDate || !validTime) {
-            return res.json({ success: false, message: "Invalid date or time format" });
+            return res.status(400).json({ success: false, message: "Định dạng ngày giờ không hợp lệ" });
         }
 
-        // Check for duplicate slot
+        // Check if the slot already exists for the doctor at the specified date and time
         const [existingSlot] = await req.app.locals.db.execute(
             'SELECT * FROM slots WHERE doctor_id = ? AND slot_date = ? AND slot_time = ?',
             [doctorId, slotDate, slotTime]
         );
-        console.log("existingSlot", existingSlot)
+
         if (existingSlot.length > 0) {
-            return res.json({ success: false, message: "Slot already exists for this doctor on the selected date and time" });
+            return res.status(400).json({ success: false, message: "Slot đã tồn tại cho bác sĩ vào thời gian này" });
         }
 
-        // Insert into the database
+        // Insert new slot into the database
         await req.app.locals.db.execute(
             'INSERT INTO slots (doctor_id, slot_date, slot_time) VALUES (?, ?, ?)',
-            [doctorId, slotDate, slotTime] // Cập nhật trường tại đây
+            [doctorId, slotDate, slotTime]
         );
 
-        res.json({ success: true, message: "Thành công" });
+        res.status(200).json({ success: true, message: "Thêm lịch hẹn thành công" });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Error adding slot:", error);
+        res.status(500).json({ success: false, message: "Đã xảy ra lỗi. Vui lòng thử lại sau." });
     }
 };
 
 
-// API to update an existing slot
+
 const updateSlot = async (req, res) => {
     try {
-        const { id, doctorId, slotDate, slotTime } = req.body; // Cập nhật trường từ camelCase
+        const { id, doctorId, slotDate, slotTime } = req.body;
 
-        // Validate slot_date and slot_time
+        // Validate required fields
         if (!id || !doctorId || !slotDate || !slotTime) {
-            return res.status(400).json({ success: false, message: "Missing required fields" });
+            return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
         }
 
+        // Validate slot_date and slot_time formats
         const validDate = /^\d{4}-\d{2}-\d{2}$/.test(slotDate);
         const validTime = /^\d{2}:\d{2}(:\d{2})?$/.test(slotTime);
 
         if (!validDate || !validTime) {
-            return res.status(400).json({ success: false, message: "Invalid date or time format" });
+            return res.status(400).json({ success: false, message: "Định dạng ngày giờ không hợp lệ" });
+        }
+
+        // Check if the slot exists before updating
+        const [existingSlot] = await req.app.locals.db.execute(
+            'SELECT * FROM slots WHERE id = ?',
+            [id]
+        );
+
+        if (existingSlot.length === 0) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy slot với ID này" });
+        }
+
+        // Check for duplicate slot after the update (same doctor, date, time)
+        const [duplicateSlot] = await req.app.locals.db.execute(
+            'SELECT * FROM slots WHERE doctor_id = ? AND slot_date = ? AND slot_time = ? AND id != ?',
+            [doctorId, slotDate, slotTime, id]
+        );
+
+        if (duplicateSlot.length > 0) {
+            return res.status(400).json({ success: false, message: "Slot đã tồn tại cho bác sĩ vào thời gian này" });
         }
 
         // Update the slot in the database
         await req.app.locals.db.execute(
             'UPDATE slots SET doctor_id = ?, slot_date = ?, slot_time = ? WHERE id = ?',
-            [doctorId, slotDate, slotTime, id] // Cập nhật trường tại đây
+            [doctorId, slotDate, slotTime, id]
         );
 
-        res.json({ success: true, message: "Slot updated successfully" });
+        res.status(200).json({ success: true, message: "Lịch hẹn đã được cập nhật thành công" });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Error updating slot:", error);
+        res.status(500).json({ success: false, message: "Đã xảy ra lỗi. Vui lòng thử lại sau." });
     }
 };
+
 
 // API to delete a slot
 const deleteSlot = async (req, res) => {
@@ -633,7 +672,7 @@ const deleteSlot = async (req, res) => {
         // Delete the slot from the database
         await req.app.locals.db.execute('DELETE FROM slots WHERE id = ?', [id]);
 
-        res.json({ success: true, message: "Slot deleted successfully" });
+        res.json({ success: true, message: "Slot xóa thành công" });
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: error.message });
