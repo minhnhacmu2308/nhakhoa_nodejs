@@ -80,7 +80,7 @@ const Sidebar = () => {
               )}
             </div>
           )}
-
+          {aToken !== "eyJhbGciOiJIUzI1NiJ9.bmhhbnZpZW5AZ21haWwuY29tMTIzNDU2Nzg5.X50HKqcCT48nLV1sMwwHGT0jB3c9ev0RWAUjUYB8t18" && (
           <div>
             <button 
               onClick={toggleServiceMenu} 
@@ -100,7 +100,7 @@ const Sidebar = () => {
               </div>
             )}
           </div>
-
+          )}
           <div>
             <button 
               onClick={toggleNewsMenu} 

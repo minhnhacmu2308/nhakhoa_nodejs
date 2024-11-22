@@ -12,6 +12,7 @@ const AdminContextProvider = (props) => {
     const [aToken, setAToken] = useState(localStorage.getItem('aToken') ? localStorage.getItem('aToken') : '')
 
     const [appointments, setAppointments] = useState([])
+    const [statisical, setStatisical] = useState([])
     const [doctors, setDoctors] = useState([])
     const [services, setServices] = useState([])
     const [users, setUsers] = useState([])
@@ -99,6 +100,25 @@ const AdminContextProvider = (props) => {
             const { data } = await axios.get(backendUrl + '/api/admin/appointments', { headers: { aToken } })
             if (data.success) {
                 setAppointments(data.appointments.reverse())
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            toast.error(error.message)
+            console.log(error)
+        }
+
+    }
+
+    // Getting all appointment data from Database using API
+    const getMonthly = async () => {
+
+        try {
+
+            const { data } = await axios.get(backendUrl + '/api/admin/monthly', { headers: { aToken } })
+            if (data.success) {
+                setStatisical(data.statisical)
             } else {
                 toast.error(data.message)
             }
@@ -202,11 +222,13 @@ const AdminContextProvider = (props) => {
         getAllServices,
         changeAvailability,
         appointments,
+        getMonthly,
         getAllAppointments,
         getDashData,
         cancelAppointment,
         completeAppointment,
         dashData,
+        statisical,
         confirmAppointment
     }
 

@@ -5,10 +5,10 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
-import nodemailer from 'nodemailer';
-import multer from 'multer';
-import XLSX from 'xlsx';
-import path from 'path';
+import nodemailer from "nodemailer";
+import multer from "multer";
+import XLSX from "xlsx";
+import path from "path";
 import fs from "fs";
 
 
@@ -23,24 +23,57 @@ const storage = multer.diskStorage({
 
 // Middleware upload
 const uploadA = multer({ storage });
+
+// API tải file Excel
 const downloadFileExcel = async (req, res) => {
-    const filePath = path.join("./uploads", '1732106430717-nhakhoa1.xlsx'); // Đường dẫn tới file cần tải
+    const filePath = path.join("./uploads", "template_tamthoi.xlsx"); // Đường dẫn file Excel gốc
 
-    // Kiểm tra xem tệp có tồn tại không
-    fs.exists(filePath, (exists) => {
-        if (!exists) {
-            return res.status(404).send('File not found');
-        }
+    // Kiểm tra file có tồn tại không
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send("File not found");
+    }
 
-        // Đặt header để tải xuống file với tên tệp gốc
-        res.setHeader('Content-Disposition', 'attachment; filename="datammm.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    try {
+       // Đọc file Excel gốc, giữ lại cả dữ liệu và định dạng
+       const workbook = XLSX.readFile(filePath, { cellStyles: true }); // Thêm option cellStyles để giữ lại định dạng
 
-        // Đọc và gửi tệp Excel dưới dạng stream
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res); // Sử dụng stream để gửi tệp về client
-    });
-}
+        // Lấy danh sách bác sĩ từ database
+        const [doctors] = await req.app.locals.db.execute(
+            "SELECT id doctor_id, name `Tên bác sĩ` FROM doctors"
+        );
+
+        // Chuyển đổi danh sách bác sĩ thành sheet
+        const doctorSheet = XLSX.utils.json_to_sheet(doctors);
+
+        // Thêm sheet mới vào workbook
+        XLSX.utils.book_append_sheet(workbook, doctorSheet, "Danh sách bác sĩ");
+
+        // Lưu workbook vào file tạm thời
+        const tempFilePath = path.join("./uploads", "updated_template.xlsx");
+        XLSX.writeFile(workbook, tempFilePath);
+
+        // Gửi file Excel với sheet mới
+        res.setHeader(
+            "Content-Disposition",
+            'attachment; filename="template_with_doctors.xlsx"'
+        );
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+        const fileStream = fs.createReadStream(tempFilePath);
+        fileStream.pipe(res);
+
+        // Xóa file tạm sau khi gửi xong
+        fileStream.on("close", () => {
+            fs.unlinkSync(tempFilePath);
+        });
+    } catch (error) {
+        console.error("Error while processing Excel file:", error);
+        res.status(500).send("Internal Server Error");
+    }
+};
 
 const addSlotsFromExcel = async (req, res) => {
     try {
@@ -151,6 +184,19 @@ const appointmentsAdmin = async (req, res) => {
     try {
         const [appointments] = await req.app.locals.db.execute('SELECT a.*,b.name patname,c.slot_date,c.slot_time,d.name docname,e.title FROM appointments a left join users b on a.userId = b.id left join slots c on a.slotId = c.id left join doctors d on c.doctor_id = d.id left join services e on a.serviceId = e.id ');
         res.json({ success: true, appointments });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to get all appointments list
+const statisical = async (req, res) => {
+    try {
+        const [statisical] = await req.app.locals.db.execute(
+            "SELECT DATE_FORMAT(date, '%Y-%m') AS month, SUM(amount) AS total_revenue FROM appointments WHERE cancelled = 0 AND isCompleted = 1 GROUP BY DATE_FORMAT(date, '%Y-%m') ORDER BY month DESC;"
+        );
+        res.json({ success: true, statisical });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -632,6 +678,7 @@ const getSlotById = async (req, res) => {
 
 export {
     loginAdmin,
+    statisical,
     appointmentsAdmin,
     appointmentCancel,
     appointmentConfirm,

@@ -11,7 +11,6 @@ const AddSlot = () => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
 
-
     const { backendUrl } = useContext(AppContext)
     const { aToken, doctors, getAllDoctors } = useContext(AdminContext)
 
@@ -41,18 +40,15 @@ const AddSlot = () => {
         formData.append('file', file);
 
         try {
-            // Gọi API để tải tệp lên
             const response = await axios.post(backendUrl + '/api/admin/add-slot-excel', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'aToken': aToken
                 },
             });
-            // Hiển thị thông báo thành công
             toast.success(response.data.message);
             setFile(null);
         } catch (error) {
-            // Xử lý lỗi nếu có
             console.error(error);
             toast.error('Có lỗi trong quá trình tải tập tin lên');
         } finally {
@@ -60,37 +56,46 @@ const AddSlot = () => {
         }
     };
 
+    // Tải template Excel từ API
+    const handleDownloadTemplate = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/admin/download-excel', {
+                headers: { aToken },
+                responseType: 'blob' // Định dạng dữ liệu trả về là file
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'template.xlsx'); // Tên file tải xuống
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Template đã được tải xuống');
+        } catch (error) {
+            console.error(error);
+            toast.error('Không thể tải xuống template');
+        }
+    };
+
     const onSubmitHandler = async (event) => {
-        event.preventDefault()
+        event.preventDefault();
 
         try {
-            // const formData = new FormData();
-            // formData.append('slotDate', slotDate) // Thêm Slot Date
-            // formData.append('doctorId', doctorId) // Thêm Doctor ID
-            // formData.append('slotTime', slotTime) // Thêm Slot Time
-
-            // // In ra formdata            
-            // formData.forEach((value, key) => {
-            //     console.log(`${key}: ${value}`);
-            // });
-            // console.log("formData", formData)
-
-            const { data } = await axios.post(backendUrl + '/api/admin/add-slot', { slotDate, doctorId, slotTime }, { headers: { aToken } })
+            const { data } = await axios.post(backendUrl + '/api/admin/add-slot', { slotDate, doctorId, slotTime }, { headers: { aToken } });
             if (data.success) {
-                toast.success(data.message)
-                setSlotDate('') // Reset Slot Date
-                setDoctorId('') // Reset Doctor ID
-                setSlotTime('') // Reset Slot Time
-
+                toast.success(data.message);
+                setSlotDate('');
+                setDoctorId('');
+                setSlotTime('');
             } else {
-                toast.error(data.message)
+                toast.error(data.message);
             }
-
         } catch (error) {
-            toast.error(error.message)
-            console.log(error)
+            toast.error(error.message);
+            console.log(error);
         }
-    }
+    };
 
     return (
         <div className='m-5 w-full'>
@@ -145,6 +150,13 @@ const AddSlot = () => {
 
             <div className='mt-10'>
                 <h2 className='mb-3 text-lg font-medium'>Thêm ca bằng excel file</h2>
+                {/* Nút tải xuống template */}
+                <button
+                    onClick={handleDownloadTemplate}
+                    className='bg-blue-500 px-10 py-3 mt-4 mb-4 text-white rounded-full'
+                >
+                    Tải file mẫu
+                </button>
                 <form onSubmit={handleFileUpload} className='bg-white px-8 py-8 border rounded w-full max-w-4xl'>
                     <div className='flex flex-col gap-4'>
                         <input
@@ -162,10 +174,11 @@ const AddSlot = () => {
                         </button>
                     </div>
                 </form>
+
+                
             </div>
         </div>
     );
-
 }
 
-export default AddSlot
+export default AddSlot;
