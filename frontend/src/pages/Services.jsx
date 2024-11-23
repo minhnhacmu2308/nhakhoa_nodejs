@@ -12,7 +12,7 @@ const Services = () => {
 
   return (
     <div>
-      <p className='text-gray-600'>List our services</p>
+      <p className='text-gray-600'>Các dịch vụ ở phòng khám chúng tôi</p>
       <div className='flex flex-col sm:flex-row items-start gap-5 mt-5'>
         <div className='w-full grid grid-cols-1 sm:grid-cols-4 gap-4 gap-y-6'>
           {services.map((item) => (

@@ -11,7 +11,7 @@ const loginDoctor = async (req, res) => {
         const [user] = await req.app.locals.db.execute('SELECT * FROM doctors WHERE email = ?', [email]);
 
         if (!user.length) {
-            return res.json({ success: false, message: "Invalid credentials" });
+            return res.json({ success: false, message: "Thất bại" });
         }
 
         const isMatch = await bcrypt.compare(password, user[0].password);
@@ -20,7 +20,7 @@ const loginDoctor = async (req, res) => {
             const token = jwt.sign({ id: user[0].id }, process.env.JWT_SECRET);
             res.json({ success: true, token });
         } else {
-            res.json({ success: false, message: "Invalid credentials" });
+            res.json({ success: false, message: "Thất bại" });
         }
 
     } catch (error) {

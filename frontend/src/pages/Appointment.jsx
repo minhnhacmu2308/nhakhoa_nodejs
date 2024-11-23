@@ -211,20 +211,20 @@ const Appointment = () => {
                 {/* Hiển thị nút nếu còn slot, nếu không thì ẩn */}
                 {availableSlotTimes.length > 0 && (
                     <button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-20 py-3 rounded-full my-6'>
-                        {isLoading ? "Booking..." : "Book an appointment"}
+                        {isLoading ? "Đang xử lý..." : "Đặt lịch hẹn"}
                     </button>
                 )}
 
             </div>
             <div className="feedbacks">
-                <h2 className="feedback-title">Đánh giá từ khách hàng</h2>
+                <h5 className="feedback-title">Đánh giá từ khách hàng</h5>
                 {feedbacks.length > 0 ? (
                     feedbacks.map((feedback) => (
                         <div key={feedback.id} className="feedback-item">
                             <img src={feedback.image} alt={feedback.name} className="feedback-avatar" />
                             <div className="feedback-content">
                                 <div className="feedback-header">
-                                    <p className="feedback-name">{feedback.userName} - {feedback.serviceName}</p>
+                                    <p className="feedback-name">{feedback.userName} <span style={{ fontWeight: 'normal' }}>đánh giá dịch vụ</span>  {feedback.serviceName}</p>
                                     <span className="feedback-date">{new Date(feedback.date).toLocaleDateString()}</span>
                                 </div>
                                 <div className="feedback-stars">{renderStars(feedback.rate)}</div>

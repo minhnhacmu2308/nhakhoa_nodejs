@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Nov 20, 2024 at 01:44 PM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Máy chủ: 127.0.0.1
+-- Thời gian đã tạo: Th10 23, 2024 lúc 08:25 AM
+-- Phiên bản máy phục vụ: 10.4.21-MariaDB
+-- Phiên bản PHP: 7.3.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `nhakhoa_db`
+-- Cơ sở dữ liệu: `nhakhoa_db`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `appointments`
+-- Cấu trúc bảng cho bảng `appointments`
 --
 
 CREATE TABLE `appointments` (
@@ -39,19 +39,31 @@ CREATE TABLE `appointments` (
   `isCompleted` tinyint(1) DEFAULT 0,
   `isReview` tinyint(1) DEFAULT 0,
   `isConfirm` tinyint(1) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `appointments`
+-- Đang đổ dữ liệu cho bảng `appointments`
 --
 
 INSERT INTO `appointments` (`id`, `userId`, `slotId`, `serviceId`, `amount`, `date`, `cancelled`, `payment`, `isCompleted`, `isReview`, `isConfirm`) VALUES
-(1, 7, 19, 1, 200000.00, '2024-11-19 09:06:48', 0, 0, 1, 0, 1);
+(1, 2, 8, 1, '200000.00', '2024-10-29 12:52:43', 1, 0, 0, 0, NULL),
+(2, 1, 8, 7, '200000.00', '2024-10-29 12:53:29', 1, 0, 0, 0, NULL),
+(3, 1, 8, 7, '200000.00', '2024-10-29 13:01:42', 0, 0, 1, 0, NULL),
+(4, 2, 13, 8, '200000.00', '2024-10-29 14:55:01', 0, 0, 0, 0, NULL),
+(5, 2, 13, 7, '200000.00', '2024-10-29 14:56:22', 1, 0, 0, 0, NULL),
+(6, 2, 13, 7, '200000.00', '2024-10-29 14:58:27', 1, 0, 0, 0, NULL),
+(7, 2, 10, 7, '100000.00', '2024-10-29 15:01:02', 0, 0, 1, 0, NULL),
+(8, 3, 14, 7, '400000.00', '2024-11-10 07:16:51', 1, 0, 0, 0, NULL),
+(9, 3, 14, 1, '200000.00', '2024-11-11 23:54:44', 1, 0, 0, 0, NULL),
+(10, 2, 17, 1, '200000.00', '2024-11-12 14:55:10', 0, 0, 1, 1, NULL),
+(11, 2, 16, 7, '400000.00', '2024-11-12 16:06:42', 0, 1, 0, 0, NULL),
+(12, 3, 21, 1, '200000.00', '2024-11-22 09:46:29', 0, 0, 1, 0, 1),
+(13, 3, 18, 1, '200000.00', '2024-11-23 07:01:59', 0, 0, 0, 0, 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doctors`
+-- Cấu trúc bảng cho bảng `doctors`
 --
 
 CREATE TABLE `doctors` (
@@ -67,10 +79,10 @@ CREATE TABLE `doctors` (
   `available` tinyint(1) DEFAULT 1,
   `address` varchar(255) NOT NULL,
   `date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `doctors`
+-- Đang đổ dữ liệu cho bảng `doctors`
 --
 
 INSERT INTO `doctors` (`id`, `name`, `email`, `password`, `image`, `speciality`, `degree`, `experience`, `about`, `available`, `address`, `date`) VALUES
@@ -79,22 +91,22 @@ INSERT INTO `doctors` (`id`, `name`, `email`, `password`, `image`, `speciality`,
 (3, 'Lê Thị Kiều Thu', 'kieuthu@gmail.com', '$2b$10$77dOQZrDoHZPx66X2FyfGeLsEYD78w7925BSpsm7jvrQ7kNG0Qgq2', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1730207549/ha7iwisrpw5kgsplujsc.jpg', 'Chuyên khoa người lớn', 'Bác sĩ nha khoa', '4 Year', 'Bác sĩ tốt nghiệp bằng xuất sắc chuyên ngành đa khoa', 1, 'Hà Nội', '2024-10-29 20:10:32'),
 (4, 'Hồ Gia Hào', 'giahao@gmail.com', '$2b$10$Rdg6uyib0K7kUknjoHfQWeipbAlVft7p.MzwRiCsUy2OAOcc9R3Ae', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1730207645/d7kaslxowsj6njtop6wu.jpg', 'Chuyên khoa trẻ em', 'Bác sĩ nha khoa', '3 Year', 'Top Doctors to Book\r\nSimply browse through our extensive list of trusted', 1, 'Hà Nội', '2024-10-29 20:12:09'),
 (6, 'Lê Viết Sang', 'sang@gmail.com', '$2b$10$AZdk1tljV56ebvZTaXrd2OkTbYbhybrgcHx9gDTHNBcVhJsJKrWra', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731260193/ovughhj9bc7zm6oep3vl.jpg', 'Chuyên khoa trẻ em', 'Nha khoa', '1 Year', 'Chuyên Nha Khoa', 1, 'Hà Nội', '2024-11-11 00:34:11'),
-(7, 'Phạm Ngọc Thái', 'ngocthai@gmail.com', '$2b$10$nenH5uuPbEjxzzDzZVc6VudCh3a7YmfngV1w6cYzhuNiTHeaTFCzi', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731423231/uwbyeczxv7vnb3s6hzet.jpg', 'Chuyên khoa trẻ em', 'Thạc sĩ', '4 Năm', 'Thạc sĩ nha khoa', 1, 'Hà Nội', '2024-11-12 21:51:25');
+(7, 'Phạm Ngọc Thái', 'ngocthai@gmail.com', '$2b$10$glum8EwwaRDhrDf065deBuGtultQtHqNhmd8MpvqRJTk8MbxkX.1W', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731423231/uwbyeczxv7vnb3s6hzet.jpg', 'Chuyên khoa trẻ em', 'Thạc sĩ', '4 Năm', 'Thạc sĩ nha khoa', 1, 'Hà Nội', '2024-11-12 21:51:25');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `doc_ser`
+-- Cấu trúc bảng cho bảng `doc_ser`
 --
 
 CREATE TABLE `doc_ser` (
   `id` int(11) NOT NULL,
   `doctor_id` int(11) NOT NULL,
   `service_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `doc_ser`
+-- Đang đổ dữ liệu cho bảng `doc_ser`
 --
 
 INSERT INTO `doc_ser` (`id`, `doctor_id`, `service_id`) VALUES
@@ -111,7 +123,7 @@ INSERT INTO `doc_ser` (`id`, `doctor_id`, `service_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `feedbacks`
+-- Cấu trúc bảng cho bảng `feedbacks`
 --
 
 CREATE TABLE `feedbacks` (
@@ -121,10 +133,10 @@ CREATE TABLE `feedbacks` (
   `rate` int(11) NOT NULL,
   `comment` text NOT NULL,
   `date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `feedbacks`
+-- Đang đổ dữ liệu cho bảng `feedbacks`
 --
 
 INSERT INTO `feedbacks` (`id`, `userId`, `serviceId`, `rate`, `comment`, `date`) VALUES
@@ -133,7 +145,7 @@ INSERT INTO `feedbacks` (`id`, `userId`, `serviceId`, `rate`, `comment`, `date`)
 -- --------------------------------------------------------
 
 --
--- Table structure for table `news`
+-- Cấu trúc bảng cho bảng `news`
 --
 
 CREATE TABLE `news` (
@@ -142,10 +154,10 @@ CREATE TABLE `news` (
   `image` text DEFAULT 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAACXBIWXMAABCcAAAQnAEmzTo0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAA5uSURBVHgB7d0JchvHFcbxN+C+iaQolmzFsaWqHMA5QXID+wZJTmDnBLZu4BvER4hvYJ/AvoHlimPZRUngvoAg4PkwGJOiuGCd6df9/1UhoJZYJIBvXndPL5ndofljd8NW7bP8y79bZk+tmz8ATFdmu3nWfuiYfdNo2383389e3P5Xb9B82X1qs/YfU3AB1Cuzr+3cnt8U5Mb132i+7n5mc/a9EV4gDF37Z15Qv',
   `shortdes` text NOT NULL,
   `description` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `news`
+-- Đang đổ dữ liệu cho bảng `news`
 --
 
 INSERT INTO `news` (`id`, `title`, `image`, `shortdes`, `description`) VALUES
@@ -154,7 +166,7 @@ INSERT INTO `news` (`id`, `title`, `image`, `shortdes`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `services`
+-- Cấu trúc bảng cho bảng `services`
 --
 
 CREATE TABLE `services` (
@@ -164,25 +176,25 @@ CREATE TABLE `services` (
   `shortdes` text NOT NULL,
   `description` text NOT NULL,
   `price` decimal(10,2) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `services`
+-- Đang đổ dữ liệu cho bảng `services`
 --
 
 INSERT INTO `services` (`id`, `title`, `image`, `shortdes`, `description`, `price`) VALUES
-(1, 'Nhổ Răng Khôn', 'https://nhakhoatrongrang.com/wp-content/uploads/2024/01/nho-rang-khon-banner-mobile.jpg', 'Răng khôn là răng số 8 – chiếc răng mọc cuối cùng trên cung hàm gây nhiều phiền toái đau nhức kéo dài, nướu răng sưng tấy, tích đọng thức ăn gây hôi miệng', 'Răng khôn là răng số 8 – chiếc răng mọc cuối cùng trên cung hàm gây nhiều phiền toái đau nhức kéo dài, nướu răng sưng tấy, tích đọng thức ăn gây hôi miệng', 200000.00),
-(7, 'Trám răng thẩm mỹ', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729516921/uzfxpea9fwybgrbputvo.jpg', 'Trám răng là phương pháp sử dụng vật liệu nhân tạo để bổ sung vào phần mô răng bị thiếu do sâu răng hoặc do sứt, mẻ răng. Không chỉ giúp khôi phục hình dạng và chức năng ăn nhai cho răng, phương pháp này còn giúp ngăn chặn vi khuẩn và tránh mài cùi, giữ nguyên cấu trúc tự nhiên của răng.', 'Trám răng là phương pháp sử dụng vật liệu nhân tạo để bổ sung vào phần mô răng bị thiếu do sâu răng hoặc do sứt, mẻ răng. Không chỉ giúp khôi phục hình dạng và chức năng ăn nhai cho răng, phương pháp này còn giúp ngăn chặn vi khuẩn và tránh mài cùi, giữ nguyên cấu trúc tự nhiên của răng.', 400000.00),
-(8, 'Tẩy Trắng Răng', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729519506/jtdmm8l8gkmomli72g1b.jpg', 'Tẩy trắng răng là quá trình loại bỏ các vết ố vàng, bám mảng từ bề mặt răng, giúp răng trở nên sáng hơn. Tuy nhiên, an toàn của quá trình tẩy trắng răng phụ thuộc', 'Tẩy trắng răng là quá trình loại bỏ các vết ố vàng, bám mảng từ bề mặt răng, giúp răng trở nên sáng hơn. Tuy nhiên, an toàn của quá trình tẩy trắng răng phụ thuộc', 300000.00),
-(9, 'Dán Sứ Veneer', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729520057/ocyaoudtba9iyackeegq.jpg', 'Dán răng sứ Veneer sử dụng mặt dán siêu mỏng 0.2 mm – 0.5 mm làm từ 100% sứ nguyên khối ốp lên bề mặt của răng thật để cải thiện tình trạng: răng ố vàng', 'Dán răng sứ Veneer sử dụng mặt dán siêu mỏng 0.2 mm – 0.5 mm làm từ 100% sứ nguyên khối ốp lên bề mặt của răng thật để cải thiện tình trạng: răng ố vàng', 100000.00),
-(10, 'Trồng Răng Implant', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731250585/roxggfyanuvgb9zdyg6m.jpg', 'Trồng răng Implant là giải pháp tối ưu để thay thế một hoặc nhiều răng bị mất, thậm chí toàn hàm, giúp tăng tính thẩm mỹ và khôi phục gần 100% chức năng ăn', 'Trồng răng Implant là giải pháp tối ưu để thay thế một hoặc nhiều răng bị mất, thậm chí toàn hàm, giúp tăng tính thẩm mỹ và khôi phục gần 100% chức năng ăn', 250000.00),
-(11, 'Niềng Răng Thẩm Mỹ', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731254096/bixlcmxekoyry44t2lbn.jpg', 'Niềng răng thẩm mỹ là phương pháp giải quyết triệt để các vấn đề răng mọc lệch, răng bị thưa, răng hô, răng móm,… thông qua cơ chế sử dụng bộ dây cung', 'Niềng răng thẩm mỹ là phương pháp giải quyết triệt để các vấn đề răng mọc lệch, răng bị thưa, răng hô, răng móm,… thông qua cơ chế sử dụng bộ dây cung', 150000.00),
-(12, 'Cạo Vôi Răng', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731254251/ssogvoj5zdm7djexyeuk.jpg', 'Cạo vôi răng là thủ thuật sử dụng các dụng cụ nha khoa chuyên dụng để làm sạch các mảng bám ra khỏi thân răng và nướu một cách nhanh chóng', 'Cạo vôi răng là thủ thuật sử dụng các dụng cụ nha khoa chuyên dụng để làm sạch các mảng bám ra khỏi thân răng và nướu một cách nhanh chóng', 240000.00);
+(1, 'Nhổ Răng Khôn', 'https://nhakhoatrongrang.com/wp-content/uploads/2024/01/nho-rang-khon-banner-mobile.jpg', 'Răng khôn là răng số 8 – chiếc răng mọc cuối cùng trên cung hàm gây nhiều phiền toái đau nhức kéo dài, nướu răng sưng tấy, tích đọng thức ăn gây hôi miệng', 'Răng khôn là răng số 8 – chiếc răng mọc cuối cùng trên cung hàm gây nhiều phiền toái đau nhức kéo dài, nướu răng sưng tấy, tích đọng thức ăn gây hôi miệng', '200000.00'),
+(7, 'Trám răng thẩm mỹ', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729516921/uzfxpea9fwybgrbputvo.jpg', 'Trám răng là phương pháp sử dụng vật liệu nhân tạo để bổ sung vào phần mô răng bị thiếu do sâu răng hoặc do sứt, mẻ răng. Không chỉ giúp khôi phục hình dạng và chức năng ăn nhai cho răng, phương pháp này còn giúp ngăn chặn vi khuẩn và tránh mài cùi, giữ nguyên cấu trúc tự nhiên của răng.', 'Trám răng là phương pháp sử dụng vật liệu nhân tạo để bổ sung vào phần mô răng bị thiếu do sâu răng hoặc do sứt, mẻ răng. Không chỉ giúp khôi phục hình dạng và chức năng ăn nhai cho răng, phương pháp này còn giúp ngăn chặn vi khuẩn và tránh mài cùi, giữ nguyên cấu trúc tự nhiên của răng.', '400000.00'),
+(8, 'Tẩy Trắng Răng', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729519506/jtdmm8l8gkmomli72g1b.jpg', 'Tẩy trắng răng là quá trình loại bỏ các vết ố vàng, bám mảng từ bề mặt răng, giúp răng trở nên sáng hơn. Tuy nhiên, an toàn của quá trình tẩy trắng răng phụ thuộc', 'Tẩy trắng răng là quá trình loại bỏ các vết ố vàng, bám mảng từ bề mặt răng, giúp răng trở nên sáng hơn. Tuy nhiên, an toàn của quá trình tẩy trắng răng phụ thuộc', '300000.00'),
+(9, 'Dán Sứ Veneer', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1729520057/ocyaoudtba9iyackeegq.jpg', 'Dán răng sứ Veneer sử dụng mặt dán siêu mỏng 0.2 mm – 0.5 mm làm từ 100% sứ nguyên khối ốp lên bề mặt của răng thật để cải thiện tình trạng: răng ố vàng', 'Dán răng sứ Veneer sử dụng mặt dán siêu mỏng 0.2 mm – 0.5 mm làm từ 100% sứ nguyên khối ốp lên bề mặt của răng thật để cải thiện tình trạng: răng ố vàng', '100000.00'),
+(10, 'Trồng Răng Implant', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731250585/roxggfyanuvgb9zdyg6m.jpg', 'Trồng răng Implant là giải pháp tối ưu để thay thế một hoặc nhiều răng bị mất, thậm chí toàn hàm, giúp tăng tính thẩm mỹ và khôi phục gần 100% chức năng ăn', 'Trồng răng Implant là giải pháp tối ưu để thay thế một hoặc nhiều răng bị mất, thậm chí toàn hàm, giúp tăng tính thẩm mỹ và khôi phục gần 100% chức năng ăn', '250000.00'),
+(11, 'Niềng Răng Thẩm Mỹ', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731254096/bixlcmxekoyry44t2lbn.jpg', 'Niềng răng thẩm mỹ là phương pháp giải quyết triệt để các vấn đề răng mọc lệch, răng bị thưa, răng hô, răng móm,… thông qua cơ chế sử dụng bộ dây cung', 'Niềng răng thẩm mỹ là phương pháp giải quyết triệt để các vấn đề răng mọc lệch, răng bị thưa, răng hô, răng móm,… thông qua cơ chế sử dụng bộ dây cung', '150000.00'),
+(12, 'Cạo Vôi Răng', 'https://res.cloudinary.com/db18w7hbk/image/upload/v1731254251/ssogvoj5zdm7djexyeuk.jpg', 'Cạo vôi răng là thủ thuật sử dụng các dụng cụ nha khoa chuyên dụng để làm sạch các mảng bám ra khỏi thân răng và nướu một cách nhanh chóng', 'Cạo vôi răng là thủ thuật sử dụng các dụng cụ nha khoa chuyên dụng để làm sạch các mảng bám ra khỏi thân răng và nướu một cách nhanh chóng', '240000.00');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `slots`
+-- Cấu trúc bảng cho bảng `slots`
 --
 
 CREATE TABLE `slots` (
@@ -191,10 +203,10 @@ CREATE TABLE `slots` (
   `slot_date` date NOT NULL,
   `slot_time` time NOT NULL,
   `is_booked` tinyint(1) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `slots`
+-- Đang đổ dữ liệu cho bảng `slots`
 --
 
 INSERT INTO `slots` (`id`, `doctor_id`, `slot_date`, `slot_time`, `is_booked`) VALUES
@@ -208,20 +220,21 @@ INSERT INTO `slots` (`id`, `doctor_id`, `slot_date`, `slot_time`, `is_booked`) V
 (15, 1, '2024-11-12', '14:00:00', 0),
 (16, 7, '2024-11-13', '10:00:00', 1),
 (17, 7, '2024-11-14', '11:00:00', 1),
-(18, 2, '2024-11-20', '19:00:00', 1),
-(19, 4, '2024-11-22', '16:06:00', 1),
-(20, 1, '2024-11-20', '16:40:00', 0),
-(21, 1, '2024-11-25', '08:00:00', 0),
-(22, 2, '2024-11-25', '09:00:00', 0),
-(23, 3, '2024-11-25', '10:00:00', 0),
-(27, 1, '2024-11-26', '08:00:00', 0),
-(28, 2, '2024-11-27', '09:00:00', 0),
-(29, 3, '2024-11-28', '10:00:00', 0);
+(18, 1, '2024-11-28', '08:00:00', 1),
+(19, 2, '2024-11-27', '09:00:00', 0),
+(20, 3, '2024-11-28', '10:00:00', 0),
+(21, 1, '2024-11-26', '08:00:00', 1),
+(22, 3, '2024-11-26', '08:00:00', 0),
+(23, 4, '2024-11-28', '08:00:00', 0),
+(24, 4, '2024-11-22', '11:00:00', 0),
+(25, 7, '2024-11-29', '09:00:00', 0),
+(26, 7, '2024-11-27', '16:00:00', 0),
+(27, 7, '2024-11-29', '08:00:00', 0);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Cấu trúc bảng cho bảng `users`
 --
 
 CREATE TABLE `users` (
@@ -234,10 +247,10 @@ CREATE TABLE `users` (
   `dob` varchar(50) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `image` text DEFAULT 'data:image/png;base64,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'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `users`
+-- Đang đổ dữ liệu cho bảng `users`
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `address`, `gender`, `dob`, `password`, `image`) VALUES
@@ -246,114 +259,113 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `address`, `gender`, `dob`,
 (3, 'Nguyen Cao Nguyen', 'nguyencaonguyencmu@gmail.com', '0394073759', 'Hà nội', 'Male', '1999-11-09', '$2b$10$38UwThTEzQWP3ltX/iephenELcixOW3SOfp31.SCNUW80PWgtByVa', 'data:image/png;base64,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'),
 (4, 'nguyen', 'lenguyen@gmail.com', '0394878545', 'Hà Nội', 'Nam', '1996-11-05', '$2b$10$k//e5HbU0vcYy8B7tm21iu/V4TPXJixXUwc5HbvT80F2NUgJiudTC', 'data:image/png;base64,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'),
 (5, 'Bùi Xuân Thịnh ', 'thinh@gmail.com', '090535465', 'Đà Nẵng', 'Nam', '1994-12-06', '$2b$10$2NyTo/G7LLhmcyvS/6vIce41NfIUcV4W4sv.KNEjkVGeBIN5xFRlO', 'data:image/png;base64,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'),
-(6, 'Nguyễn Lê Toàn', 'letoan@gmail.com', '0354073756', 'Đà Nẵng', 'Nam', '1995-11-06', '$2b$10$IpXY4l12VY5PlMUGWUfeDObMHsI6ULohvSQJS5ui8XhRGQPobLjWu', 'data:image/png;base64,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'),
-(7, 'Minh Nhã', 'nguyenminhnhacmu@gmail.com', '000000000', NULL, NULL, NULL, '$2b$10$x5cA1OHssA4N3FRcRavyqOssz7YHcg.TVRmDmnK2Lcs825vdYlGoa', 'data:image/png;base64,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');
+(6, 'Nguyễn Lê Toàn', 'letoan@gmail.com', '0354073756', 'Đà Nẵng', 'Nam', '1995-11-06', '$2b$10$IpXY4l12VY5PlMUGWUfeDObMHsI6ULohvSQJS5ui8XhRGQPobLjWu', 'data:image/png;base64,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');
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `appointments`
+-- Chỉ mục cho bảng `appointments`
 --
 ALTER TABLE `appointments`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `doctors`
+-- Chỉ mục cho bảng `doctors`
 --
 ALTER TABLE `doctors`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- Indexes for table `doc_ser`
+-- Chỉ mục cho bảng `doc_ser`
 --
 ALTER TABLE `doc_ser`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `feedbacks`
+-- Chỉ mục cho bảng `feedbacks`
 --
 ALTER TABLE `feedbacks`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `news`
+-- Chỉ mục cho bảng `news`
 --
 ALTER TABLE `news`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `services`
+-- Chỉ mục cho bảng `services`
 --
 ALTER TABLE `services`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `slots`
+-- Chỉ mục cho bảng `slots`
 --
 ALTER TABLE `slots`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `appointments`
+-- AUTO_INCREMENT cho bảng `appointments`
 --
 ALTER TABLE `appointments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
--- AUTO_INCREMENT for table `doctors`
+-- AUTO_INCREMENT cho bảng `doctors`
 --
 ALTER TABLE `doctors`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `doc_ser`
+-- AUTO_INCREMENT cho bảng `doc_ser`
 --
 ALTER TABLE `doc_ser`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT for table `feedbacks`
+-- AUTO_INCREMENT cho bảng `feedbacks`
 --
 ALTER TABLE `feedbacks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `news`
+-- AUTO_INCREMENT cho bảng `news`
 --
 ALTER TABLE `news`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `services`
+-- AUTO_INCREMENT cho bảng `services`
 --
 ALTER TABLE `services`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT for table `slots`
+-- AUTO_INCREMENT cho bảng `slots`
 --
 ALTER TABLE `slots`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

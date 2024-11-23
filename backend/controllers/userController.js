@@ -675,7 +675,7 @@ const verifyStripe = async (req, res) => {
 
 const allSlotUser = async (req, res) => {
     try {
-        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots WHERE slot_date > CURRENT_DATE OR (slot_date = CURRENT_DATE AND slot_time > CURRENT_TIME)');
+        const [slots] = await req.app.locals.db.execute('SELECT * FROM slots WHERE slot_date > CURRENT_DATE OR (slot_date = CURRENT_DATE AND slot_time > CURRENT_TIME) order by slot_date,slot_time');
         res.json({ success: true, slots });
     } catch (error) {
         console.log(error);
