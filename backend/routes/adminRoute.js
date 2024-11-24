@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   loginAdmin, appointmentsAdmin, appointmentCancel, appointmentConfirm, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew, addSlotsFromExcel, uploadA, downloadFileExcel,statisical
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew, addSlotsFromExcel, uploadA, downloadFileExcel, statisical
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -42,9 +42,9 @@ adminRouter.post("/add-service", authAdmin, upload.single('image'), addService)
 adminRouter.post("/add-news", authAdmin, upload.single('image'), addNew)
 adminRouter.get("/appointments", appointmentsAdmin)
 adminRouter.get("/monthly", statisical)
-adminRouter.post("/cancel-appointment", authAdmin, appointmentCancel)
-adminRouter.post("/confirm-appointment", authAdmin, appointmentConfirm)
-adminRouter.post("/complete-appointment", authAdmin, appointmentComplete)
+adminRouter.post("/cancel-appointment", appointmentCancel)
+adminRouter.post("/confirm-appointment", appointmentConfirm)
+adminRouter.post("/complete-appointment", appointmentComplete)
 adminRouter.get("/all-doctors", authAdmin, allDoctors)
 adminRouter.post("/change-availability", authAdmin, changeAvailablity)
 adminRouter.get("/dashboard", adminDashboard)

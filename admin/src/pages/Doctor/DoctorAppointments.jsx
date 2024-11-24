@@ -4,9 +4,9 @@ import { AppContext } from '../../context/AppContext';
 import { assets } from '../../assets/assets';
 
 const DoctorAppointments = () => {
-  const { dToken, appointments, getAppointments, cancelAppointment, completeAppointment } = useContext(DoctorContext);
+  const { dToken, appointments, getAppointments, cancelAppointment, completeAppointment, confirmAppointment } = useContext(DoctorContext);
   const { calculateAge, currency } = useContext(AppContext);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [dateQuery, setDateQuery] = useState('');
   const [amountQuery, setAmountQuery] = useState('');
@@ -156,7 +156,7 @@ const DoctorAppointments = () => {
                   </td>
                   <td className="px-6 py-3 border-b text-left">{item.amount}</td>
                   <td className="px-6 py-3 border-b text-left">
-                    {item.isCompleted === 0 ? 'Chưa hoàn thành' : 'Đã hoàn thành'}
+                    {item.isConfirm === 0 ? 'Chưa xác nhận' : item.isCompleted === 0 ? 'Chưa hoàn thành' : 'Đã hoàn thành'}
                   </td>
                   <td className="px-6 py-3 border-b text-center">
                     {item.cancelled ? (
@@ -171,12 +171,17 @@ const DoctorAppointments = () => {
                           src={assets.cancel_icon}
                           alt="Cancel"
                         />
-                        <img
+                        {item.isConfirm === 0 ? <img
+                          onClick={() => confirmAppointment(item.id)}
+                          className="w-6 h-6 cursor-pointer mx-1"
+                          src={assets.complete_icon} // Thay đổi thành icon hoàn thành của bạn
+                          alt="confirm"
+                        /> : <img
                           onClick={() => completeAppointment(item.id)}
                           className="w-6 h-6 cursor-pointer mx-1"
                           src={assets.complete_icon}
                           alt="Complete"
-                        />
+                        />}
                       </div>
                     )}
                   </td>

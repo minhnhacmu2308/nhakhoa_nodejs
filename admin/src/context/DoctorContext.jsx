@@ -14,6 +14,27 @@ const DoctorContextProvider = (props) => {
     const [dashData, setDashData] = useState(false)
     const [profileData, setProfileData] = useState(false)
 
+    // Function to cancel appointment using API
+    const confirmAppointment = async (appointmentId) => {
+
+        try {
+
+            const { data } = await axios.post(backendUrl + '/api/admin/confirm-appointment', { appointmentId }, { headers: { dToken } })
+
+            if (data.success) {
+                toast.success(data.message)
+                getAppointments()
+            } else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            toast.error(error.message)
+            console.log(error)
+        }
+
+    }
+
     // Getting Doctor appointment data from Database using API
     const getAppointments = async () => {
         try {
@@ -120,6 +141,7 @@ const DoctorContextProvider = (props) => {
         dashData, getDashData,
         profileData, setProfileData,
         getProfileData,
+        confirmAppointment
     }
 
     return (
