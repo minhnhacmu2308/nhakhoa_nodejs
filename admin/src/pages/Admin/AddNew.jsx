@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
+import { useLocation, useNavigate } from 'react-router-dom'
 
 
 const AddNew = () => {
@@ -14,6 +15,7 @@ const AddNew = () => {
 
     const { backendUrl } = useContext(AppContext);
     const { aToken } = useContext(AdminContext);
+    const navigate = useNavigate();
 
     const onSubmitHandler = async (event) => {
         event.preventDefault();
@@ -36,6 +38,7 @@ const AddNew = () => {
                 settitle('');
                 setsortdes('');
                 setdescribe('');
+                navigate('/news-list');  // Điều hướng trở lại danh sách dịch vụ
             } else {
                 toast.error(data.message);
             }

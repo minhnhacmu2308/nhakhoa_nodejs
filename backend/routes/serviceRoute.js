@@ -70,4 +70,5 @@ serviceRouter.get("/newlist", newList)
 serviceRouter.get("/detail", serviceDetail)
 serviceRouter.get("/feedbacks", listFeedbackByServiceId)
 
+
 export default serviceRouter;

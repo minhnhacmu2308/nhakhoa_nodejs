@@ -476,6 +476,93 @@ const addDoctor = async (req, res) => {
     }
 };
 
+const editDoctor = async (req, res) => {
+    try {
+        const { name, email, password, speciality, degree, experience, about, address, services } = req.body;
+        const imageFile = req.file;
+        const doctorId = req.params.id; // Lấy ID bác sĩ từ tham số URL
+
+        // Kiểm tra tất cả các trường bắt buộc
+        if (!name || !email || !speciality || !degree || !experience || !about || !address || !services) {
+            return res.json({ success: false, message: "Thiếu thông tin" });
+        }
+
+        // Kiểm tra email hợp lệ
+        if (!validator.isEmail(email)) {
+            return res.json({ success: false, message: "Vui lòng nhập email hợp lệ" });
+        }
+
+        // Kiểm tra độ dài mật khẩu nếu có mật khẩu mới
+        if (password && password.length < 8) {
+            return res.json({ success: false, message: "Vui lòng nhập mật khẩu mạnh hơn (ít nhất 8 ký tự)" });
+        }
+
+        // Kiểm tra loại file ảnh nếu có ảnh mới
+        if (imageFile) {
+            const allowedFileTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedFileTypes.includes(imageFile.mimetype)) {
+                return res.json({ success: false, message: "Vui lòng tải lên tệp hình ảnh hợp lệ" });
+            }
+        }
+
+        // Mã hóa mật khẩu nếu có mật khẩu mới
+        let hashedPassword = null;
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(password, salt);
+        }
+
+        // Nếu có ảnh mới, tải ảnh lên Cloudinary
+        let imageUrl = null;
+        if (imageFile) {
+            const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+            imageUrl = imageUpload.secure_url;
+        }
+
+        // Cập nhật thông tin bác sĩ trong bảng doctors
+        const updateDoctorQuery = `
+            UPDATE doctors
+            SET name = ?, email = ?, ${hashedPassword ? "password = ?, " : ""} speciality = ?, degree = ?, experience = ?, about = ?, address = ?
+            WHERE id = ?
+        `;
+        const updateDoctorParams = [
+            name, email, speciality, degree, experience, about, address, doctorId
+        ];
+        if (hashedPassword) updateDoctorParams.splice(2, 0, hashedPassword);
+
+        await req.app.locals.db.execute(updateDoctorQuery, updateDoctorParams);
+
+        // Nếu có ảnh mới, cập nhật ảnh bác sĩ
+        if (imageUrl) {
+            await req.app.locals.db.execute(
+                'UPDATE doctors SET image = ? WHERE id = ?',
+                [imageUrl, doctorId]
+            );
+        }
+
+        // Xóa tất cả các dịch vụ hiện tại của bác sĩ
+        await req.app.locals.db.execute('DELETE FROM doc_ser WHERE doctor_id = ?', [doctorId]);
+
+        // Thêm các dịch vụ mới vào bảng doc_ser
+        const serviceInsertPromises = services.map(serviceId => {
+            return req.app.locals.db.execute(
+                'INSERT INTO doc_ser (doctor_id, service_id) VALUES (?, ?)',
+                [doctorId, serviceId]
+            );
+        });
+
+        // Chờ tất cả các dịch vụ được thêm vào bảng doc_ser
+        await Promise.all(serviceInsertPromises);
+
+        res.json({ success: true, message: 'Cập nhật bác sĩ thành công' });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: 'Đã xảy ra lỗi: ' + error.message });
+    }
+};
+
+
 
 
 
@@ -504,6 +591,94 @@ const addService = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+const editService = async (req, res) => {
+    try {
+        const { id, title, sortdes, fees, describe } = req.body;
+        const imageFile = req.file;
+
+        if (!id || !title || !fees || !sortdes) {
+            return res.json({ success: false, message: "Missing required information" });
+        }
+
+        let imageUrl = null;
+        // Nếu có ảnh mới, upload lên Cloudinary
+        if (imageFile) {
+            const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+            imageUrl = imageUpload.secure_url;
+        }
+
+        // Cập nhật dịch vụ trong cơ sở dữ liệu
+        let updateQuery = `
+            UPDATE services
+            SET title = ?, shortdes = ?, description = ?, price = ?`;
+        
+        const updateParams = [
+            title, sortdes, describe, fees
+        ];
+
+        // Nếu có ảnh mới, thêm vào câu lệnh SQL và parameters
+        if (imageUrl) {
+            updateQuery += `, image = ?`;
+            updateParams.push(imageUrl);
+        }
+
+        updateQuery += ` WHERE id = ?`;
+        updateParams.push(id);
+
+        await req.app.locals.db.execute(updateQuery, updateParams);
+
+        res.json({ success: true, message: 'Dịch vụ đã được cập nhật thành công' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const editNews = async (req, res) => {
+    try {
+        const { id, title, sortdes, describe } = req.body;
+        const imageFile = req.file;
+
+        if (!id || !title || !sortdes) {
+            return res.json({ success: false, message: "Missing required information" });
+        }
+
+        let imageUrl = null;
+        // Nếu có ảnh mới, upload lên Cloudinary
+        if (imageFile) {
+            const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+            imageUrl = imageUpload.secure_url;
+        }
+
+        // Cập nhật dịch vụ trong cơ sở dữ liệu
+        let updateQuery = `
+            UPDATE news
+            SET title = ?, shortdes = ?, description = ?`;
+        
+        const updateParams = [
+            title, sortdes, describe
+        ];
+
+        // Nếu có ảnh mới, thêm vào câu lệnh SQL và parameters
+        if (imageUrl) {
+            updateQuery += `, image = ?`;
+            updateParams.push(imageUrl);
+        }
+
+        updateQuery += ` WHERE id = ?`;
+        updateParams.push(id);
+
+        await req.app.locals.db.execute(updateQuery, updateParams);
+
+        res.json({ success: true, message: 'Tin tức đã được cập nhật thành công' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
 
 // API for adding New
 const addNew = async (req, res) => {
@@ -535,7 +710,7 @@ const addNew = async (req, res) => {
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
     try {
-        const [doctors] = await req.app.locals.db.execute('SELECT id, name, speciality, degree, experience, about, available, address, image FROM doctors');
+        const [doctors] = await req.app.locals.db.execute("SELECT a.id, a.email,name, speciality, degree, experience, about, available, address, a.image, GROUP_CONCAT(c.id ORDER BY c.id SEPARATOR ', ') AS services FROM doctors a LEFT JOIN doc_ser b ON a.id = b.doctor_id LEFT JOIN services c ON b.service_id = c.id GROUP BY a.id, a.name, a.speciality, a.degree, a.experience, a.about, a.available, a.address, a.image;");
         res.json({ success: true, doctors });
     } catch (error) {
         console.log(error);
@@ -723,6 +898,7 @@ export {
     appointmentConfirm,
     appointmentComplete,
     addDoctor,
+    editDoctor,
     allDoctors,
     adminDashboard,
     addSlot,
@@ -731,6 +907,8 @@ export {
     allSlot,
     getSlotById,
     addService,
+    editService,
+    editNews,
     addNew,
     addSlotsFromExcel,
     uploadA,

@@ -1,7 +1,7 @@
 import express from 'express';
 import {
-  loginAdmin, appointmentsAdmin, appointmentCancel, appointmentConfirm, addDoctor, allDoctors, adminDashboard
-  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService, appointmentComplete, addNew, addSlotsFromExcel, uploadA, downloadFileExcel, statisical
+  loginAdmin, appointmentsAdmin, appointmentCancel, appointmentConfirm, addDoctor,editDoctor, allDoctors, adminDashboard
+  , getSlotById, allSlot, addSlot, updateSlot, deleteSlot, addService,editService,editNews, appointmentComplete, addNew, addSlotsFromExcel, uploadA, downloadFileExcel, statisical
 } from '../controllers/adminController.js';
 import { changeAvailablity } from '../controllers/doctorController.js';
 import authAdmin from '../middleware/authAdmin.js';
@@ -37,8 +37,11 @@ adminRouter.get('/createTable', async (req, res) => {
 
 adminRouter.post("/login", loginAdmin)
 adminRouter.post("/add-doctor", authAdmin, upload.single('image'), addDoctor)
+adminRouter.post('/edit-doctor/:id', upload.single('image'), editDoctor)
 adminRouter.post("/add-slot-excel", authAdmin, uploadA.single('file'), addSlotsFromExcel)
 adminRouter.post("/add-service", authAdmin, upload.single('image'), addService)
+adminRouter.put('/edit-service', upload.single('image'), editService);
+adminRouter.put('/edit-news', upload.single('image'), editNews);
 adminRouter.post("/add-news", authAdmin, upload.single('image'), addNew)
 adminRouter.get("/appointments", appointmentsAdmin)
 adminRouter.get("/monthly", statisical)

@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const AddService = () => {
 
@@ -12,6 +13,7 @@ const AddService = () => {
     const [sortdes, setsortdes] = useState('')
     const [describe, setdescribe] = useState('');
     const [fees, setFees] = useState('')
+    const navigate = useNavigate();
 
     const { backendUrl } = useContext(AppContext)
     const { aToken } = useContext(AdminContext)
@@ -46,6 +48,7 @@ const AddService = () => {
                 setsortdes('')
                 setdescribe('')
                 setFees('')
+                navigate('/service-list');  // Điều hướng trở lại danh sách dịch vụ
             } else {
                 toast.error(data.message)
             }
@@ -93,7 +96,7 @@ const AddService = () => {
                     <textarea onChange={e => setsortdes(e.target.value)} value={sortdes} className='w-full px-4 pt-2 border rounded' rows={5} placeholder='Mô tả ngắn'></textarea>
                 </div>
 
-                <div>
+                <div style={{ display: 'none' }}>
                     <p className='mt-4 mb-2'>Nội dung chi tiết</p>
                     <div
                         contentEditable={true}
