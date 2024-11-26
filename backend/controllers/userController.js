@@ -534,6 +534,7 @@ const listAppointment = async (req, res) => {
                 d.name AS doctor_name,
                 d.speciality,
                 d.address AS doctor_address,
+                ds.services,
                 a.amount,
                 a.cancelled,
                 a.payment,
@@ -550,6 +551,8 @@ const listAppointment = async (req, res) => {
                 doctors d ON s.doctor_id = d.id
             JOIN 
                 services sv ON a.serviceId = sv.id
+            LEFT JOIN 
+            (SELECT a.id doctor_id, GROUP_CONCAT(c.id ORDER BY c.id SEPARATOR ', ') AS services FROM doctors a LEFT JOIN doc_ser b ON a.id = b.doctor_id LEFT JOIN services c ON b.service_id = c.id GROUP BY a.id) ds on d.id = ds.doctor_id
             WHERE 
                 a.userId = ? 
             ORDER BY 

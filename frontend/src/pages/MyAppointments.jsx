@@ -257,18 +257,28 @@ const MyAppointments = () => {
                                 <p className=''>{item.doctor_address}</p>
                                 <p className='text-[#464646] font-medium mt-1'>Dịch vụ:</p>
                                 {item.isEdit ? (<select
-                                    onChange={e => setServiceId(e.target.value)} value={serviceId}
+                                    onChange={e => setServiceId(e.target.value)} 
+                                    value={serviceId}
                                     className='border rounded px-2 py-2 w-full'
                                     required
                                 >
-                                    <option value={item.service_id} >{item.service_name} - {formattedVND}</option>
-                                    {services.map(item => {
-                                        const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price);
-                                        return (
-                                            <option key={item.id} value={item.id}>{item.title} - {formattedVNDService}</option>
-                                        )
-                                    })}
-                                </select>) : (<p className=''>{item.service_name} - {formattedVND}</p>)
+                                    {services
+                                        .filter(item1 => item.services.split(', ').includes(item1.id.toString())) // Lọc dịch vụ theo bác sĩ
+                                        .map(item1 => {
+                                            const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item1.price);
+                                            return (
+                                                <option 
+                                                    key={item1.id} 
+                                                    value={item1.id} 
+                                                    selected={item.service_id === item1.id}
+                                                >
+                                                    {item1.title} - {formattedVNDService}
+                                                </option>
+                                            );
+                                        })
+                                    }
+                                </select>
+                                ) : (<p className=''>{item.service_name} - {formattedVND}</p>)
                                 }
 
                                 <p className='mt-1'>
