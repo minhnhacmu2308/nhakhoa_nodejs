@@ -378,6 +378,11 @@ const editAppointment = async (req, res) => {
             [formattedDate, slotTime, doctorId]
         );
 
+        const [services] = await req.app.locals.db.execute(
+            "SELECT * FROM services WHERE id = ?",
+            [serviceId]
+        );
+
         if (slot[0].id === appointment[0].slotId && appointment[0].serviceId === serviceId) {
             return res.json({ success: false, message: 'Không có thay đổi nào' });
         }
@@ -395,8 +400,8 @@ const editAppointment = async (req, res) => {
 
         // Cập nhật thông tin cuộc hẹn
         await req.app.locals.db.execute(
-            "UPDATE appointments SET slotId = ?, serviceId = ? WHERE id = ?",
-            [slot[0].id, serviceId, appointmentId]
+            "UPDATE appointments SET slotId = ?, serviceId = ? , amount = ? WHERE id = ?",
+            [slot[0].id, serviceId, services[0].price, appointmentId]
         );
 
         // Cập nhật trạng thái slot mới và cũ

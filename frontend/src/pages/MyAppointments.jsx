@@ -244,6 +244,7 @@ const MyAppointments = () => {
                 {appointments.length === 0 ? (
                     <p className='text-center text-gray-500'>Không có dữ liệu</p>
                 ) : appointments.map((item, index) => {
+                    console.log("appointments", appointments)
                     const formattedVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
                     return (
                         <div key={index} className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-4 border-b'>
@@ -257,7 +258,7 @@ const MyAppointments = () => {
                                 <p className=''>{item.doctor_address}</p>
                                 <p className='text-[#464646] font-medium mt-1'>Dịch vụ:</p>
                                 {item.isEdit ? (<select
-                                    onChange={e => setServiceId(e.target.value)} 
+                                    onChange={e => setServiceId(e.target.value)}
                                     value={serviceId}
                                     className='border rounded px-2 py-2 w-full'
                                     required
@@ -267,9 +268,9 @@ const MyAppointments = () => {
                                         .map(item1 => {
                                             const formattedVNDService = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item1.price);
                                             return (
-                                                <option 
-                                                    key={item1.id} 
-                                                    value={item1.id} 
+                                                <option
+                                                    key={item1.id}
+                                                    value={item1.id}
                                                     selected={item.service_id === item1.id}
                                                 >
                                                     {item1.title} - {formattedVNDService}
