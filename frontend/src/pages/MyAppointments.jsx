@@ -141,7 +141,7 @@ const MyAppointments = () => {
         setServiceId(updatedAppointments[index].service_id)
         setDoctorId(updatedAppointments[index].doctor_id)
         setAppointmentId(updatedAppointments[index].appointment_id)
-        const slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(updatedAppointments[index].doctor_id, 10))
+        let slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(updatedAppointments[index].doctor_id, 10))
         const obj = {
             doctor_id: updatedAppointments[index].doctor_id,
             id: updatedAppointments[index].service_id,
@@ -150,6 +150,9 @@ const MyAppointments = () => {
             slot_time: updatedAppointments[index].slot_time
         }
         slotDoc.push(obj);
+        const currentDate = new Date(); // Lấy ngày hiện tại
+
+        slotDoc = slotDoc.filter(slot => new Date(slot.slot_date) > currentDate);
         setSlotArr(slotDoc);
         updatedAppointments[index].isEdit = !updatedAppointments[index].isEdit
         updatedAppointments.forEach((appointment, i) => {

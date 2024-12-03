@@ -27,7 +27,12 @@ const Appointment = () => {
     const fetchDocInfo = async () => {
         const docInfo = doctors.find((doc) => doc.id === parseInt(docId, 10))
         setDocInfo(docInfo)
-        const slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(docId, 10))
+        let slotDoc = slots.filter((doc) => doc.doctor_id === parseInt(docId, 10))
+        console.log("slotDoc", slotDoc)
+        const currentDate = new Date(); // Lấy ngày hiện tại
+
+        slotDoc = slotDoc.filter(slot => new Date(slot.slot_date) > currentDate);
+        console.log("slotDoc1", slotDoc)
         setSlotDocs(slotDoc);
     }
 
