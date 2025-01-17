@@ -75,7 +75,7 @@ const Appointment = () => {
 
     const bookAppointment = async () => {
         if (!token) {
-            toast.warning('Đăng nhập để đặt lịch');
+            toast.warning('Đăng nhập để đặt lịfdfdfdfdfdfdfdfdfdch');
             return navigate('/login');
         }
 
